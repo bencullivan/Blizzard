@@ -1,0 +1,71 @@
+package com.bencullivan.blizzard;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.concurrent.ArrayBlockingQueue;
+
+/**
+ * Handles accepting new connections on a port specified by the user
+ * @author bencullivan
+ */
+class BlizzardListener implements Runnable {
+
+    private final int PORT;
+    private final ArrayBlockingQueue<SocketChannel> acceptedChannels;
+    private ServerSocketChannel serverSocketChannel;
+
+    /**
+     * Constructs a new instance of BlizzardListener
+     * @param port - the post on which to listen for new connections
+     * @param store - the BlizzardStore where non-local data is stored
+     */
+    public BlizzardListener(int port, BlizzardStore store) {
+        PORT = port;
+        acceptedChannels = store.getAcceptedChannelQueue();
+    }
+
+    /**
+     * Opens a non-blocking ServerSocketChannel on the specified port
+     * @throws IOException if there is an exception when opening the channel
+     */
+    private void openChannel() throws IOException {
+        serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.bind(new InetSocketAddress(PORT));
+        serverSocketChannel.configureBlocking(false);
+    }
+
+    @Override
+    public void run() {
+        // open a non-blocking ServerSocketChannel on the specified port
+        try {
+            openChannel();
+        } catch (IOException e) {
+            return;
+        }
+
+        // begin the accepting loop
+        while (true) {
+            try {
+                // attempt to accept a new connection
+                SocketChannel channel = serverSocketChannel.accept();
+                if (channel == null) continue;
+                acceptedChannels.put(channel);
+            } catch (IOException e) {
+                if (e instanceof ClosedChannelException) {
+                    // if the channel was closed, attempt to open a new channel
+                    try {
+                        openChannel();
+                    } catch (IOException e2) {
+                        // if the attempt to open a new channel fails, stop execution
+                        return;
+                    }
+                }
+            } catch (InterruptedException | SecurityException e) {
+                return;
+            }
+        }
+    }
+}
