@@ -19,6 +19,10 @@ public class BlizzardRequest {
         badRequest = false;
     }
 
+    /**
+     * Sets the request line of this request.
+     * @param requestLine The String array that contains the three parts of this request's request line.
+     */
     public void setRequestLine(String[] requestLine) {
         this.requestLine = requestLine;
     }
