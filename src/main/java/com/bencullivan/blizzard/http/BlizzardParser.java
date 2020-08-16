@@ -57,6 +57,9 @@ class BlizzardParser {
             else if (current.charAt(i) == CRLF[0] && current.charAt(i+1) == CRLF[1]) {
                 splitHeader(start, i, startIndexes, reqStrings, request, contentLength);
                 i += 2;
+                startIndexes[0] = reqStrings.size()-1;
+                startIndexes[1] = i;
+                start = i;
             }
 
             // by default move forward two places
@@ -101,13 +104,13 @@ class BlizzardParser {
         int fStart = -1;
         int vEnd = -1;
         for (int j = 0; j < header.length(); j++) {
-            if (!Character.isWhitespace(header.charAt(j))) {
+            if (!Character.isSpaceChar(header.charAt(j))) {
                 fStart = j;
                 break;
             }
         }
         for (int j = header.length()-1; j >= 0; j--) {
-            if (!Character.isWhitespace(header.charAt(j))) {
+            if (!Character.isSpaceChar(header.charAt(j))) {
                 vEnd = j+1;
                 break;
             }
@@ -115,22 +118,19 @@ class BlizzardParser {
 
         // ensure the start and end values are valid
         if (fStart >= vEnd || header.charAt(fStart) == ':' || header.charAt(vEnd-1) == ':')
-            throw new BadRequestException("Invalid header");
+            throw new BadRequestException(BadRequest.INVALID_HEADER);
 
         // search for the colon in the header
-        int fEnd = -1;
-        int vStart = -1;
-        for (int j = 0; j < header.length(); j++) {
-            if (header.charAt(j) == ':') {
-                fEnd = j;
-                vStart = j+1;
-                while (vStart < header.length() && Character.isWhitespace(header.charAt(vStart))) vStart++;
-                break;
-            }
-        }
+        int fEnd = header.indexOf(":");
+        int vStart = fEnd+1;
+        while (vStart < header.length() && Character.isWhitespace(header.charAt(vStart))) vStart++;
+
+        // if there is another color in the header, this request is not in valid http format
+        if (header.indexOf(":", vStart+1) != -1)
+            throw new BadRequestException(BadRequest.INVALID_HEADER);
 
         // ensure that the start and end values are valid
-        if (fEnd <= fStart || vEnd <= vStart) throw new BadRequestException("Invalid header");
+        if (fEnd <= fStart || vEnd <= vStart) throw new BadRequestException(BadRequest.INVALID_HEADER);
 
         // add the header field and value to the header map
         String field = header.substring(fStart, fEnd).toLowerCase();
@@ -142,7 +142,7 @@ class BlizzardParser {
             try {
                 contentLength[0] = Integer.parseInt(value);
             } catch (NumberFormatException e) {
-                throw new BadRequestException("Invalid header");
+                throw new BadRequestException(BadRequest.INVALID_HEADER);
             }
         }
     }
@@ -166,7 +166,7 @@ class BlizzardParser {
 
             // if the previous string did not end with \r, then this request line is not in valid http format
             if (prev.charAt(prev.length()-1) != CRLF[0])
-                throw new BadRequestException("Illegal character present in request line");
+                throw new BadRequestException(BadRequest.ILLEGAL_CHAR);
 
             // instantiate the StringBuilder that will hold the String that will be split
             StringBuilder toSplit = new StringBuilder();
@@ -184,14 +184,29 @@ class BlizzardParser {
             splitReqLine(toSplit.toString(), request);
 
             // the entire String has been parsed
-            return current.length();
+            return 1;
         }
+        // if the first char is not a \n and te final char of the previous string is a \r
+        // the request line is not in valid http format
+        else if (reqStrings.size() > 1 && reqStrings.get(reqStrings.size()-2)
+                .charAt(reqStrings.get(reqStrings.size()-2).length()-1) == CRLF[0]) {
+            throw new BadRequestException(BadRequest.ILLEGAL_CHAR);
+        }
+        // if the first char is a \n and this is the first string, the request line is not in valid http request format
+        else if (reqStrings.size() == 1 && reqStrings.get(0).charAt(0) == CRLF[1])
+            throw new BadRequestException(BadRequest.ILLEGAL_CHAR);
 
         // search for the CRLF
         int i = 0;
         while (i < current.length()-1) {
             // if the next char is the beginning of the CRLF, move forward one place
-            if (current.charAt(i+1) == CRLF[0]) i++;
+            if (current.charAt(i+1) == CRLF[0]) {
+                // if the beginning of the CRLF is followed by a character other than \n
+                // then the request is not in valid http format
+                if (i+2 < current.length() && current.charAt(i+2) != CRLF[1])
+                    throw new BadRequestException(BadRequest.ILLEGAL_CHAR);
+                i++;
+            }
 
             // if the CRLF has been found, compose and split the request line
             else if (current.charAt(i) == CRLF[0] && current.charAt(i+1) == CRLF[1]) {
@@ -216,6 +231,11 @@ class BlizzardParser {
                 return i + 2;
             }
 
+            // if the current character is a \n and it is not preceded by a \r, then the request is not
+            // in valid http format
+            else if (i > 0 && current.charAt(i) == CRLF[1] && current.charAt(i-1) != CRLF[0])
+                throw new BadRequestException(BadRequest.INVALID_REQ_LINE_FORMAT);
+
             // by default move forward two places
             else i += 2;
         }
@@ -236,10 +256,10 @@ class BlizzardParser {
 
         // make sure that there are three distinct parts of the request String
         // if there are, set the request line
-        if (split.length != 3) {
+        if (split.length  == 3 && split[2].length() > 5) request.setRequestLine(split);
+        else {
             request.setBadRequest(true);
-            throw new BadRequestException("Incorrect request line format.");
+            throw new BadRequestException(BadRequest.INVALID_REQ_LINE_FORMAT);
         }
-        else request.setRequestLine(split);
     }
 }
