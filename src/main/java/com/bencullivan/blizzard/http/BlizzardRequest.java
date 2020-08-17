@@ -11,6 +11,7 @@ public class BlizzardRequest {
     private final String DEFAULT_RETURN_VAL = "none";  // returned when a request line field is missing
     private final HashMap<String, String> headers;  // contains all of the header fields mapped to their values
     private String[] requestLine;  // contains the three parts of the request line
+    private StringBuffer body;  // contains the body of the message
     private boolean badRequest;  // whether this http request is a bad request
 
     public BlizzardRequest() {
@@ -23,7 +24,7 @@ public class BlizzardRequest {
      * Sets the request line of this request.
      * @param requestLine The String array that contains the three parts of this request's request line.
      */
-    public void setRequestLine(String[] requestLine) {
+    void setRequestLine(String[] requestLine) {
         this.requestLine = requestLine;
     }
 
@@ -51,7 +52,7 @@ public class BlizzardRequest {
     /**
      * @return Whether the request line has been set.
      */
-    public boolean requestLineIsSet() {
+    boolean requestLineIsSet() {
         return requestLine.length == 3;
     }
 
@@ -60,7 +61,7 @@ public class BlizzardRequest {
      * @param field The header field.
      * @param value The header value.
      */
-    public void setHeader(String field, String value) {
+    void setHeader(String field, String value) {
         headers.put(field, value);
     }
 
@@ -74,10 +75,25 @@ public class BlizzardRequest {
     }
 
     /**
+     * Appends the given String to the body of this request.
+     * @param partialBody The part of the body to append.
+     */
+    void appendToBody(String partialBody) {
+        body.append(partialBody);
+    }
+
+    /**
+     * @return The body of this request.
+     */
+    public String getBody() {
+        return body.toString();
+    }
+
+    /**
      * Sets whether this request is bad.
      * @param badRequest Whether this request is bad.
      */
-    public void setBadRequest(boolean badRequest) {
+    void setBadRequest(boolean badRequest) {
         this.badRequest = badRequest;
     }
 

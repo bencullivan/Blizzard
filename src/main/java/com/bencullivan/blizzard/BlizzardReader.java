@@ -1,6 +1,6 @@
 package com.bencullivan.blizzard;
 
-import com.bencullivan.blizzard.http.BadRequestException;
+import com.bencullivan.blizzard.http.exceptions.BadRequestException;
 import com.bencullivan.blizzard.http.BlizzardExtra;
 import com.bencullivan.blizzard.http.BlizzardMessage;
 

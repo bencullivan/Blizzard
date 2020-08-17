@@ -1,4 +1,4 @@
-com/bencullivan/blizzard/BlizzardTestRunner.java
- com.bencullivan.blizzard.BlizzardTestRunner
 com/bencullivan/blizzard/http/BlizzardMessageTest.java
  com.bencullivan.blizzard.http.BlizzardMessageTest
+com/bencullivan/blizzard/BlizzardTestRunner.java
+ com.bencullivan.blizzard.BlizzardTestRunner

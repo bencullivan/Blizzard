@@ -1,5 +1,6 @@
 package com.bencullivan.blizzard.http;
 
+import com.bencullivan.blizzard.http.exceptions.BadRequestException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,11 +12,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class BlizzardMessageTest {
 
-    private BlizzardMessage message = new BlizzardMessage();
+    private BlizzardMessage message = new BlizzardMessage(2048);
 
     @AfterEach
     public void resetMessage() {
-        message = new BlizzardMessage();
+        message = new BlizzardMessage(2048);
     }
 
     @Test
@@ -51,7 +52,7 @@ public class BlizzardMessageTest {
                 BadRequestException.class,
                 () -> message.splitReqLine(reqLine)
         );
-        assertEquals("Incorrect request line format.", thrown.getMessage());
+        assertEquals("Invalid request line format.", thrown.getMessage());
     }
 
     @Test
@@ -99,7 +100,7 @@ public class BlizzardMessageTest {
         reqStrings.add("/");
         reqStrings.add("2\r\n");
         message.setReqStrings(reqStrings);
-        parseReqLineExcept("Incorrect request line format.");
+        parseReqLineExcept("Invalid request line format.");
     }
 
     public void parseReqLineExcept(String msg) {
@@ -118,7 +119,7 @@ public class BlizzardMessageTest {
         reqStrings.add(" 1568 \r\n Other-header: yay \r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0, 2});
-        splitHeaderGoodInput(0, 6, new int[] {1568});
+        splitHeaderGoodInput(0, 6, 1568);
         assertEquals("1568", message.getRequest().getHeader("content-length"));
     }
 
@@ -128,13 +129,13 @@ public class BlizzardMessageTest {
         reqStrings.add("\r\n COOKIE: yum yum tasty cookies \r\n Other-header: yay \r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0, 2});
-        splitHeaderGoodInput(2, 33, new int[] {-42069});
+        splitHeaderGoodInput(2, 33, -42069);
         assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
     }
 
-    public void splitHeaderGoodInput(int start, int i, int[] clExpected) throws BadRequestException {
+    public void splitHeaderGoodInput(int start, int i, int clExpected) throws BadRequestException {
         message.splitHeader(start, i);
-        assertArrayEquals(clExpected, message.getContentLength());
+        assertEquals(clExpected, message.getContentLength());
     }
 
     @Test
@@ -160,7 +161,7 @@ public class BlizzardMessageTest {
         reqStrings.add(" COOKIE: yum yum tasty cookies \r\n Other-header:yay \r\n   ");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0,0});
-        parseHeaderGoodInput(new int[] {0, 53}, new int[] {-42069}, true);
+        parseHeaderGoodInput(new int[] {0, 53}, -42069, true);
         assertEquals("yay", message.getRequest().getHeader("other-header"));
         assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
     }
@@ -173,7 +174,7 @@ public class BlizzardMessageTest {
         reqStrings.add("\n  First-header:  first val \r\n second-header:second val \r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {2, 1});
-        parseHeaderGoodInput(new int[] {2, 58}, new int[] {-42069}, false);
+        parseHeaderGoodInput(new int[] {2, 58}, -42069, false);
         assertEquals("GET", message.getRequest().getMethod());
         assertEquals("/", message.getRequest().getUri());
         assertEquals("2", message.getRequest().getVersion());
@@ -181,11 +182,11 @@ public class BlizzardMessageTest {
         assertEquals("second val", message.getRequest().getHeader("second-header"));
     }
 
-    public void parseHeaderGoodInput(int[] sExpected, int[] clExpected, boolean rSet)
+    public void parseHeaderGoodInput(int[] sExpected, int clExpected, boolean rSet)
             throws BadRequestException {
         if (rSet) message.getRequest().setRequestLine(new String[] {"GET", "/", "1.1"});
         message.parseHeader();
         assertArrayEquals(sExpected, message.getStartIndexes());
-        assertArrayEquals(clExpected, message.getContentLength());
+        assertEquals(clExpected, message.getContentLength());
     }
 }
