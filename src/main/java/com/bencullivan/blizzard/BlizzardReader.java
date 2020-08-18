@@ -1,7 +1,7 @@
 package com.bencullivan.blizzard;
 
 import com.bencullivan.blizzard.http.exceptions.BadRequestException;
-import com.bencullivan.blizzard.http.BlizzardExtra;
+import com.bencullivan.blizzard.http.BlizzardAttachment;
 import com.bencullivan.blizzard.http.BlizzardMessage;
 
 import java.io.IOException;
@@ -10,7 +10,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
 
-class BlizzardReader implements Runnable {
+class BlizzardReader{
 
     private final Selector selector;
 
@@ -18,37 +18,35 @@ class BlizzardReader implements Runnable {
         this.selector = selector;
     }
 
-    private void read() throws IOException {
-        selector.select();
+    public void read() {
+        try {
+            selector.selectNow();
+        } catch (IOException e) {
+            return;
+        }
         Set<SelectionKey> keys = selector.selectedKeys();
         for (SelectionKey key : keys) {
             // get the HttpMessage of this key
-            BlizzardMessage message = ((BlizzardExtra) key.attachment()).getMessage();
-
-            // read into the HttpMessage of this key
-            ((SocketChannel) key.channel()).read(message.getCurrent());
+            BlizzardMessage message = ((BlizzardAttachment) key.attachment()).getMessage();
 
             try {
+                // read into the HttpMessage of this key
+                ((SocketChannel) key.channel()).read(message.getCurrent());
                 // process the message
-                message.processInput();
+                if (message.isDoneProcessing()) {
+                    // the message can be garbage collected
+                    ((BlizzardAttachment) key.attachment()).setMessage(null);
+
+                }
             } catch (BadRequestException e) {
                 //TODO: handle exception (bad request)
+            } catch (IOException e) {
+                //TODO: handle io exception
             } catch (IllegalStateException | UnsupportedOperationException e) {
                 //TODO: handle exception (server error)
             }
 
         }
 
-    }
-
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                read();
-            } catch (IOException e) {
-                return;
-            }
-        }
     }
 }

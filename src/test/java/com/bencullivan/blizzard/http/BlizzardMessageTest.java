@@ -4,189 +4,119 @@ import com.bencullivan.blizzard.http.exceptions.BadRequestException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BlizzardMessageTest {
 
-    private BlizzardMessage message = new BlizzardMessage(2048);
+    private BlizzardMessage message = new BlizzardMessage(2048, new BlizzardRequest());
 
     @AfterEach
     public void resetMessage() {
-        message = new BlizzardMessage(2048);
+        message = new BlizzardMessage(2048, new BlizzardRequest());
     }
 
     @Test
-    public void splitReqLineTestGoodInput1() throws BadRequestException {
-        splitReqLineGoodInput("GET /posts/all HTTP/1.1", new String[] {"GET", "/posts/all", "1.1"});
+    public void messageTest1() throws BadRequestException {
+        byte[][] a = Requests.getA();
+        message.getCurrent().put(a[0]);
+        assertFalse(message.isDoneProcessing());
+        message.getCurrent().put(a[1]);
+        assertFalse(message.isDoneProcessing());
+        message.getCurrent().put(a[2]);
+        assertTrue(message.isDoneProcessing());
+        BlizzardRequest r = message.getRequest();
+        assertEquals("GET", r.getMethod());
+        assertEquals("/posts/first", r.getUri());
+        assertEquals("1.1", r.getVersion());
+        assertEquals("www.test101.com", r.getHeader("host"));
+        assertEquals("en-us", r.getHeader("accept-language"));
+        assertEquals("Mozilla/4.0", r.getHeader("user-agent"));
+        assertEquals("10", r.getHeader("content-length"));
+        assertEquals("What's up?", r.getBody());
     }
 
     @Test
-    public void splitReqLineTestGoodInput2() throws BadRequestException {
-        splitReqLineGoodInput("   POST   /posts/new/post                      HTTP/2",
-                new String[] {"POST", "/posts/new/post", "2"});
-    }
-
-    public void splitReqLineGoodInput(String reqLine, String[] expected) throws BadRequestException {
-        message.splitReqLine(reqLine);
-        String[] actual = {message.getRequest().getMethod(), message.getRequest().getUri(),
-                message.getRequest().getVersion()};
-        assertArrayEquals(expected, actual);
-    }
-
-    @Test
-    public void splitReqLineTestExcept1() {
-        splitReqLineExcept("GET /posts  HTTP");
-    }
-
-    @Test
-    public void splitReqLineTestExcept2() {
-        splitReqLineExcept("DELETE/posts HTTP/2");
-    }
-
-    public void splitReqLineExcept(String reqLine) {
-        BadRequestException thrown = assertThrows(
-                BadRequestException.class,
-                () -> message.splitReqLine(reqLine)
-        );
-        assertEquals("Invalid request line format.", thrown.getMessage());
-    }
-
-    @Test
-    public void parseReqLineTestGoodInput1() throws BadRequestException {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("GET /posts/all HTTP/1.1  \r");
-        reqStrings.add("\n");
-        message.setReqStrings(reqStrings);
-        parseReqLineGoodInput(new String[] {"GET", "/posts/all", "1.1"}, 1);
+    public void messageTest2() throws BadRequestException {
+        byte[][] b = Requests.getB1();
+        message.getCurrent().put(b[0]);
+        assertFalse(message.isDoneProcessing());
+        message.getCurrent().put(b[1]);
+        assertFalse(message.isDoneProcessing());
+        message.getCurrent().put(b[2]);
+        assertFalse(message.isDoneProcessing());
+        message.getCurrent().put(b[3]);
+        assertTrue(message.isDoneProcessing());
+        BlizzardRequest r = message.getRequest();
+        assertEquals("POST", r.getMethod());
+        assertEquals("/pass.php", r.getUri());
+        assertEquals("1.1", r.getVersion());
+        assertEquals("127.0.0.1", r.getHeader("host"));
+        assertEquals("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0",
+                r.getHeader("user-agent"));
+        assertEquals("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                r.getHeader("accept"));
+        assertEquals("en-US,en;q=0.5", r.getHeader("accept-language"));
+        assertEquals("gzip, deflate", r.getHeader("accept-encoding"));
+        assertEquals("1", r.getHeader("dnt"));
+        assertEquals("http://127.0.0.1/pass.php", r.getHeader("referer"));
+        assertEquals("passx=87e8af376bc9d9bfec2c7c0193e6af70; PHPSESSID=l9hk7mfh0ppqecg8gialak6gt5",
+                r.getHeader("cookie"));
+        assertEquals("keep-alive", r.getHeader("connection"));
+        assertEquals("application/x-www-form-urlencoded", r.getHeader("content-type"));
+        assertEquals("29", r.getHeader("content-length"));
+        assertEquals("username=zurfyx&pass=password", r.getBody());
     }
 
     @Test
-    public void parseReqLineTestGoodInput2() throws BadRequestException {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("POST /posts/");
-        reqStrings.add("all    HTTP");
-        reqStrings.add("/");
-        reqStrings.add("2\r\n");
-        message.setReqStrings(reqStrings);
-        parseReqLineGoodInput(new String[] {"POST", "/posts/all", "2"}, 3);
-    }
-
-    public void parseReqLineGoodInput(String[] expected, int i)
-            throws BadRequestException {
-        int index = message.parseReqLine();
-        String[] actual = {message.getRequest().getMethod(), message.getRequest().getUri(),
-                message.getRequest().getVersion()};
-        assertArrayEquals(expected, actual);
-        assertEquals(i, index);
-    }
-
-    @Test
-    public void parseReqLineTestExcept1() {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("\n");
-        message.setReqStrings(reqStrings);
-        parseReqLineExcept("Illegal character present in request line.");
+    public void messageTest3() throws BadRequestException {
+        message.getCurrent().put(Requests.getB2()[0]);
+        assertTrue(message.isDoneProcessing());
+        BlizzardRequest r = message.getRequest();
+        assertEquals("POST", r.getMethod());
+        assertEquals("/pass.php", r.getUri());
+        assertEquals("1.1", r.getVersion());
+        assertEquals("127.0.0.1", r.getHeader("host"));
+        assertEquals("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0",
+                r.getHeader("user-agent"));
+        assertEquals("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                r.getHeader("accept"));
+        assertEquals("en-US,en;q=0.5", r.getHeader("accept-language"));
+        assertEquals("gzip, deflate", r.getHeader("accept-encoding"));
+        assertEquals("1", r.getHeader("dnt"));
+        assertEquals("http://127.0.0.1/pass.php", r.getHeader("referer"));
+        assertEquals("passx=87e8af376bc9d9bfec2c7c0193e6af70; PHPSESSID=l9hk7mfh0ppqecg8gialak6gt5",
+                r.getHeader("cookie"));
+        assertEquals("keep-alive", r.getHeader("connection"));
+        assertEquals("application/x-www-form-urlencoded", r.getHeader("content-type"));
+        assertEquals("29", r.getHeader("content-length"));
+        assertEquals("username=zurfyx&pass=password", r.getBody());
     }
 
     @Test
-    public void parseReqLineTestExcept2() {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("/posts/");
-        reqStrings.add("all    HTTP");
-        reqStrings.add("/");
-        reqStrings.add("2\r\n");
-        message.setReqStrings(reqStrings);
-        parseReqLineExcept("Invalid request line format.");
-    }
-
-    public void parseReqLineExcept(String msg) {
-        BadRequestException thrown = assertThrows(
-                BadRequestException.class,
-                () -> message.parseReqLine()
-        );
-        assertEquals(msg, thrown.getMessage());
-    }
-
-    @Test
-    public void splitHeaderTestGoodInput1() throws BadRequestException {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("\r\n Content-leng");
-        reqStrings.add("th: ");
-        reqStrings.add(" 1568 \r\n Other-header: yay \r\n");
-        message.setReqStrings(reqStrings);
-        message.setStartIndexes(new int[] {0, 2});
-        splitHeaderGoodInput(0, 6, 1568);
-        assertEquals("1568", message.getRequest().getHeader("content-length"));
-    }
-
-    @Test
-    public void splitHeaderTestGoodInput2() throws BadRequestException {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("\r\n COOKIE: yum yum tasty cookies \r\n Other-header: yay \r\n");
-        message.setReqStrings(reqStrings);
-        message.setStartIndexes(new int[] {0, 2});
-        splitHeaderGoodInput(2, 33, -42069);
-        assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
-    }
-
-    public void splitHeaderGoodInput(int start, int i, int clExpected) throws BadRequestException {
-        message.splitHeader(start, i);
-        assertEquals(clExpected, message.getContentLength());
-    }
-
-    @Test
-    public void splitHeaderTestExcept1() {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add("\r\n COOKIE: yum yum ta:sty cookies \r\n Other-header: yay \r\n");
-        message.setReqStrings(reqStrings);
-        message.setStartIndexes(new int[] {0, 2});
-        splitHeaderExcept(2, 34, "Invalid header.");
-    }
-
-    public void splitHeaderExcept(int start, int i, String msg) {
-        BadRequestException thrown = assertThrows(
-                BadRequestException.class,
-                () -> message.splitHeader(start, i)
-        );
-        assertEquals(msg, thrown.getMessage());
-    }
-
-    @Test
-    public void parseHeaderTestGoodInput1() throws BadRequestException {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add(" COOKIE: yum yum tasty cookies \r\n Other-header:yay \r\n   ");
-        message.setReqStrings(reqStrings);
-        message.setStartIndexes(new int[] {0,0});
-        parseHeaderGoodInput(new int[] {0, 53}, -42069, true);
-        assertEquals("yay", message.getRequest().getHeader("other-header"));
-        assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
-    }
-
-    @Test
-    public void parseHeaderTestGoodInput2() throws BadRequestException {
-        ArrayList<String> reqStrings = new ArrayList<>();
-        reqStrings.add(" GET / H");
-        reqStrings.add("TTP/2  \r");
-        reqStrings.add("\n  First-header:  first val \r\n second-header:second val \r\n");
-        message.setReqStrings(reqStrings);
-        message.setStartIndexes(new int[] {2, 1});
-        parseHeaderGoodInput(new int[] {2, 58}, -42069, false);
-        assertEquals("GET", message.getRequest().getMethod());
-        assertEquals("/", message.getRequest().getUri());
-        assertEquals("2", message.getRequest().getVersion());
-        assertEquals("first val", message.getRequest().getHeader("first-header"));
-        assertEquals("second val", message.getRequest().getHeader("second-header"));
-    }
-
-    public void parseHeaderGoodInput(int[] sExpected, int clExpected, boolean rSet)
-            throws BadRequestException {
-        if (rSet) message.getRequest().setRequestLine(new String[] {"GET", "/", "1.1"});
-        message.parseHeader();
-        assertArrayEquals(sExpected, message.getStartIndexes());
-        assertEquals(clExpected, message.getContentLength());
+    public void messageTest4() throws BadRequestException {
+        byte[][] b = Requests.getB3();
+        message.getCurrent().put(b[0]);
+        assertFalse(message.isDoneProcessing());
+        message.getCurrent().put(b[1]);
+        assertTrue(message.isDoneProcessing());
+        BlizzardRequest r = message.getRequest();
+        assertEquals("POST", r.getMethod());
+        assertEquals("/pass.php", r.getUri());
+        assertEquals("1.1", r.getVersion());
+        assertEquals("127.0.0.1", r.getHeader("host"));
+        assertEquals("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0",
+                r.getHeader("user-agent"));
+        assertEquals("text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                r.getHeader("accept"));
+        assertEquals("en-US,en;q=0.5", r.getHeader("accept-language"));
+        assertEquals("gzip, deflate", r.getHeader("accept-encoding"));
+        assertEquals("1", r.getHeader("dnt"));
+        assertEquals("http://127.0.0.1/pass.php", r.getHeader("referer"));
+        assertEquals("passx=87e8af376bc9d9bfec2c7c0193e6af70; PHPSESSID=l9hk7mfh0ppqecg8gialak6gt5",
+                r.getHeader("cookie"));
+        assertEquals("keep-alive", r.getHeader("connection"));
+        assertEquals("application/x-www-form-urlencoded", r.getHeader("content-type"));
+        assertEquals("29", r.getHeader("content-length"));
+        assertEquals("username=zurfyx&pass=password", r.getBody());
     }
 }

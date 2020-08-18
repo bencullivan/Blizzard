@@ -1,11 +1,11 @@
 package com.bencullivan.blizzard.http;
 
-public class BlizzardExtra {
+public class BlizzardAttachment {
 
     private BlizzardMessage message;
     private BlizzardRequest request;
 
-    public BlizzardExtra(BlizzardMessage message, BlizzardRequest request) {
+    public BlizzardAttachment(BlizzardMessage message, BlizzardRequest request) {
         this.message = message;
         this.request = request;
     }

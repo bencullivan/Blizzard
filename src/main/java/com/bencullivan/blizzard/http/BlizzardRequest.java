@@ -17,6 +17,7 @@ public class BlizzardRequest {
     public BlizzardRequest() {
         requestLine = new String[0];
         headers = new HashMap<>();
+        body = new StringBuffer();
         badRequest = false;
     }
 

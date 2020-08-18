@@ -5,6 +5,7 @@ import com.bencullivan.blizzard.http.exceptions.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Handles http message storage and processing.
@@ -14,6 +15,7 @@ public class BlizzardMessage {
 
     private final int UNKNOWN;  // representing an unknown number
     private final char[] CRLF;  // carriage return line feed
+    private final int MAX_HEADER_SIZE; // the maximum header size
 
     private BlizzardRequest request; // the object containing this http request
     private ArrayList<String> reqStrings;  // a list of the request Strings that have been received
@@ -21,7 +23,6 @@ public class BlizzardMessage {
     private int contentLength; // the length (in bytes) if the body of this message
     private int remainingByteCount; // the number of bytes remaining in the message
     private int readByteCount;  // the number of bytes that have been read
-    private boolean bodyFound;  // whether the body of the message has been found
 
     private ByteBuffer headerBuffer;  // a buffer that will accept incoming header bytes
     private ByteBuffer bodyBuffer;  // a buffer that will accept incoming body bytes
@@ -30,10 +31,11 @@ public class BlizzardMessage {
      * @param headerBufferSize The desired size (in bytes) of the header buffer of this message. (*A smaller header
      *                         buffer will incur a lower memory overhead but may result in slower performance.)
      */
-    public BlizzardMessage(int headerBufferSize) {
+    public BlizzardMessage(int headerBufferSize, BlizzardRequest request) {
         UNKNOWN = -42069;
         CRLF = new char[] {'\r', '\n'};
-        request = new BlizzardRequest();
+        MAX_HEADER_SIZE = 8192;
+        this.request = request;
         reqStrings = new ArrayList<>();
         startIndexes = new int[2];
         contentLength = remainingByteCount = UNKNOWN;
@@ -45,7 +47,7 @@ public class BlizzardMessage {
      * @return Whether the message is done being read.
      * @throws BadRequestException If this request is not in valid http format.
      */
-    public boolean processInput() throws BadRequestException {
+    public boolean isDoneProcessing() throws BadRequestException {
         return headerBuffer == null ? processBody() : processHeader();
     }
 
@@ -67,32 +69,56 @@ public class BlizzardMessage {
         headerBuffer.flip();
 
         // if there are no readable bytes, do nothing
-        if (headerBuffer.limit() - headerBuffer.position() == 0) return false;
+        if (headerBuffer.limit() - headerBuffer.position() == 0) {
+            headerBuffer.clear();
+            return false;
+        }
 
         // add to the byte count
         readByteCount += (headerBuffer.limit() - headerBuffer.position());
 
         // decode the buffer into a String and add it to the ArrayList of Strings
-        reqStrings.add(new String(headerBuffer.array(), StandardCharsets.UTF_8));
+        reqStrings.add(new String(Arrays.copyOfRange(headerBuffer.array(), headerBuffer.position(),
+                headerBuffer.limit()), StandardCharsets.UTF_8));
 
         // parse the newly added String
-        parseHeader();
+        boolean done = parseHeader();
 
-        // clear the buffer
-        if (bodyFound) headerBuffer = null;
-        else headerBuffer.clear();
+        // clear the buffer if the headers are not done being read
+        if (headerBuffer != null) headerBuffer.clear();
+        // if max header size has been exceeded, this is a bad request
+        if (headerBuffer != null && readByteCount > MAX_HEADER_SIZE)
+            throw new HeadersTooLargeException();
 
-        return false;
+        return done;
     }
 
     /**
      * Processes input that was read into the bodyBuffer.
      * @return Whether the message is done being read.
      */
-    boolean processBody() {
+    boolean processBody() throws BadRequestException {
         // convert the body buffer to reading mode
+        bodyBuffer.flip();
 
-        return false;
+        // if there are no readable bytes, do nothing
+        if (bodyBuffer.limit() - bodyBuffer.position() == 0) {
+            bodyBuffer.clear();
+            return false;
+        }
+
+        // decode the buffer into a String and add it to the ArrayList of Strings
+        String body = new String(Arrays.copyOfRange(bodyBuffer.array(), bodyBuffer.position(), bodyBuffer.limit()),
+                StandardCharsets.UTF_8);
+        reqStrings.add(body);
+
+        // parse the newly added String
+        boolean done = parseBody(body.getBytes().length, body);
+
+        // make the buffer ready for more reading
+        bodyBuffer.clear();
+
+        return done;
     }
 
     // ---- PARSING ---
@@ -124,6 +150,85 @@ public class BlizzardMessage {
         // if the start is at the end of the current String, nothing needs to be done
         if (startIndexes[0] == reqStrings.size()-1 && startIndexes[1] >= current.length()) return false;
 
+        // edge cases where CRLF is split between Strings
+        if (i == 0 && current.charAt(i) == CRLF[1] && reqStrings.size() > 1) {
+            String prev = reqStrings.get(reqStrings.size()-2);
+            // if this String begins with a \n and the previous three chars were \r\n\r then
+            // this is the beginning of the body
+            boolean preceded = true;
+            int reqStringsIndex = reqStrings.size()-2;
+            int stringIndex = reqStrings.get(reqStringsIndex).length()-1;
+            for (int j = 0; j < 3; j++) {
+                if ((j == 1 && reqStrings.get(reqStringsIndex).charAt(stringIndex) != '\n') ||
+                        ((j == 0 || j == 2) && reqStrings.get(reqStringsIndex).charAt(stringIndex) != '\r')) {
+                    preceded = false;
+                    break;
+                }
+                if (stringIndex > 0) stringIndex--;
+                else if (reqStringsIndex > 0) {
+                    reqStringsIndex--;
+                    stringIndex = reqStrings.get(reqStringsIndex).length()-1;
+                }
+                // if this is the beginning of the message, then there is no request line
+                // (this is defensive and should not happen)
+                else throw new RequestLineException();
+            }
+            if (preceded) {
+                // if the content length is not specified, throw if there is non whitespace
+                if (contentLength == UNKNOWN) {
+                    for (int j = 1; j < current.length(); j++) {
+                        if (!Character.isWhitespace(current.charAt(j)))
+                            throw new ContentLengthMissingException();
+                    }
+                    return true;
+                }
+                else return preBodyParse(current.substring(1));
+            }
+            // if this String begins with a \n\r\n and the past one ended with \r then this is the end of the header
+            // field and the body is directly after
+            else if (current.length() > 2 && prev.length() > 0 && prev.charAt(prev.length()-1) == CRLF[0] &&
+                    current.charAt(1) == CRLF[0] && current.charAt(2) == CRLF[1]) {
+                // we have encountered the end of a header field
+                splitHeader(start, i);
+                // if the content length is not specified, throw if there is non whitespace
+                if (contentLength == UNKNOWN) {
+                    for (int j = 3; j < current.length(); j++) {
+                        if (!Character.isWhitespace(current.charAt(j)))
+                            throw new ContentLengthMissingException();
+                    }
+                    return true;
+                }
+                else return preBodyParse(current.substring(3));
+            }
+            // if this String begins with a \n and the past one ended with \r then this is the end of a header field
+            else if (prev.length() > 0 && prev.charAt(prev.length()-1) == CRLF[0]) {
+                // we have encountered the end of a header field
+                splitHeader(start, i);
+                i += 2;
+                startIndexes[0] = reqStrings.size()-1;
+                startIndexes[1] = i;
+                start = i;
+            }
+        }
+        // if this string begins with a \r\n and the previous two chars were \r\n, the body has been reached
+        else if (i == 0 && current.charAt(i) == CRLF[0] && reqStrings.size() > 1 &&
+                current.length() > 1 && current.charAt(1) == '\n' && reqStrings.get(reqStrings.size()-2)
+                .charAt(reqStrings.get(reqStrings.size()-2).length()-1) == '\n' && ((reqStrings.get(reqStrings.size()-2)
+                .length() > 1 && reqStrings.get(reqStrings.size()-2).charAt(reqStrings.get(reqStrings.size()-2)
+                .length()-2) == '\r') || (reqStrings.size() > 2 && reqStrings.get(reqStrings.size()-2).length() == 1 &&
+                reqStrings.get(reqStrings.size()-3).charAt(reqStrings.get(reqStrings.size()-3).length()-1) == '\r'))) {
+            // if the content length is not specified, throw if there is non whitespace
+            if (contentLength == UNKNOWN) {
+                for (int j = 2; j < current.length(); j++) {
+                    if (!Character.isWhitespace(current.charAt(j)))
+                        throw new ContentLengthMissingException();
+                }
+                return true;
+            }
+            // the body
+            else return preBodyParse(current.substring(2));
+        }
+
         // loop over the current String, searching for CRLFs
         while (i < current.length()-1) {
             // if the next char is the beginning of a CRLF, move forward one place
@@ -132,10 +237,7 @@ public class BlizzardMessage {
             // if a CRLF has been found
             else if (current.charAt(i) == CRLF[0] && current.charAt(i+1) == CRLF[1]) {
                 // if this is the second consecutive CRLF either the body is next or the message is over
-                if ((i > 1 && current.charAt(i-2) == CRLF[0] && current.charAt(i-1) == CRLF[1]) ||
-                        (i == 0 && reqStrings.size() > 1 && reqStrings.get(reqStrings.size()-2)
-                        .charAt(reqStrings.get(reqStrings.size()-2).length()-2) == CRLF[0] && reqStrings
-                        .get(reqStrings.size()-2).charAt(reqStrings.get(reqStrings.size()-2).length()-1) == CRLF[1])) {
+                if (i > 1 && current.charAt(i-2) == CRLF[0] && current.charAt(i-1) == CRLF[1]) {
                     // if the content length is not known, the buffer is done being read from
                     if (contentLength == UNKNOWN && i+2 >= current.length()) return true;
 
@@ -150,12 +252,7 @@ public class BlizzardMessage {
                     }
 
                     // allocate the body buffer and parse the body
-                    String sub = current.substring(i+2);
-                    int numBytes = sub.getBytes().length;
-                    headerBuffer = null;
-                    bodyBuffer = (contentLength-numBytes > 0) ? ByteBuffer.allocate(contentLength-numBytes) :
-                            ByteBuffer.allocate(0);
-                    return parseBody(numBytes, sub);
+                    return preBodyParse(current.substring(i+2));
                 }
                 // if this is not the second consecutive CRLF, split the header and add it to the map of headers
                 else {
@@ -195,9 +292,14 @@ public class BlizzardMessage {
             }
         }
 
-        // add the part of the current string up to i
-        String beginning = reqStrings.get(reqStrings.size()-1).substring(start, i);
-        header.append(beginning);
+        if (i <= start) {
+            // remove the last char from the StringBuilder because it is a \r
+            header.deleteCharAt(header.length()-1);
+        } else {
+            // add the part of the current string up to i
+            String beginning = reqStrings.get(reqStrings.size()-1).substring(start, i);
+            header.append(beginning);
+        }
 
         // find the start of the field and end of the value in the header
         int fStart = -1;
@@ -224,10 +326,6 @@ public class BlizzardMessage {
         int vStart = fEnd+1;
         while (vStart < header.length() && Character.isWhitespace(header.charAt(vStart))) vStart++;
 
-        // if there is another color in the header, this request is not in valid http format
-        if (header.indexOf(":", vStart+1) != -1)
-            throw new InvalidHeaderException();
-
         // ensure that there is a header field
         if (fEnd <= fStart) throw new InvalidHeaderException();
 
@@ -235,11 +333,10 @@ public class BlizzardMessage {
         String field = header.substring(fStart, fEnd).toLowerCase();
         String value = vStart >= vEnd ? "" : header.substring(vStart, vEnd);
         request.setHeader(field, value);
-
         // if this was the content length header, set the content length
         if (field.equals("content-length")) {
             try {
-                contentLength = Integer.parseInt(value);
+                contentLength = remainingByteCount = Integer.parseInt(value);
             } catch (NumberFormatException e) {
                 throw new InvalidHeaderException();
             }
@@ -357,18 +454,30 @@ public class BlizzardMessage {
         }
     }
 
+    boolean preBodyParse(String sub) throws BadRequestException {
+        int numBytes = sub.getBytes().length;
+        headerBuffer = null;
+        bodyBuffer = (contentLength-numBytes > 0) ? ByteBuffer.allocate(contentLength-numBytes) :
+                ByteBuffer.allocate(0);
+        return parseBody(numBytes, sub);
+    }
+
     /**
      * Parses an http message body.
      * @param numBytes The number of bytes in this part of the body.
      * @param bodySub The substring that composes this part of the body.
      * @return Whether this message is done being processed.
-     * @throws BadRequestException
+     * @throws BadRequestException If a content length has been specified but there is no body.
      */
     boolean parseBody(int numBytes, String bodySub) throws BadRequestException {
         if (reqStrings.size() == 0) throw new NoMessageException();
 
         // append this part of the body to the request body
         request.appendToBody(bodySub);
+
+        System.out.println("parsing body " + bodySub);
+        System.out.println(numBytes);
+        System.out.println(remainingByteCount);
 
         // decrement the remaining byte count by the number of body bytes that have been read
         // if all the body bytes have been read, the message is done being read
@@ -413,5 +522,9 @@ public class BlizzardMessage {
 
     void setStartIndexes(int[] startIndexes) {
         this.startIndexes = startIndexes;
+    }
+
+    void setContentLength(int contentLength) {
+        this.contentLength = contentLength;
     }
 }

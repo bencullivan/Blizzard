@@ -1,5 +1,7 @@
 package com.bencullivan.blizzard;
 
+import com.bencullivan.blizzard.http.BlizzardMessageBodyTest;
+import com.bencullivan.blizzard.http.BlizzardMessageHeaderTest;
 import com.bencullivan.blizzard.http.BlizzardMessageTest;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
@@ -21,6 +23,8 @@ import java.util.List;
 public class BlizzardTestRunner {
     public static void main(String[] args) {
         List<DiscoverySelector> tests = new ArrayList<>(Arrays.asList(
+                DiscoverySelectors.selectClass(BlizzardMessageHeaderTest.class),
+                DiscoverySelectors.selectClass(BlizzardMessageBodyTest.class),
                 DiscoverySelectors.selectClass(BlizzardMessageTest.class)
         ));
         SummaryGeneratingListener listener = new SummaryGeneratingListener();

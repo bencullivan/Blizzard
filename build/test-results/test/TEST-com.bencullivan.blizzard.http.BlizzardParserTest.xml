@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.bencullivan.blizzard.http.BlizzardParserTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2020-08-15T23:41:48" hostname="Benjamins-MacBook-Pro-4.local" time="0.027">
-  <properties/>
-  <testcase name="parseHeaderTestGoodInput1()" classname="com.bencullivan.blizzard.http.BlizzardParserTest" time="0.027"/>
-  <system-out><![CDATA[0 31 0 0
-33 51 0 33
-]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>
