@@ -6,6 +6,6 @@ package com.bencullivan.blizzard.http.exceptions;
  */
 public class RequestLineException extends BadRequestException {
     public RequestLineException() {
-        super("Invalid request line format.");
+        super("Invalid request line format.", BadRequest.REQUEST_LINE);
     }
 }

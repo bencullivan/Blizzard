@@ -10,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BlizzardMessageBodyTest {
 
-    private BlizzardMessage message = new BlizzardMessage(2048, new BlizzardRequest());
+    private BlizzardMessage message = new BlizzardMessage(2048, 20);
 
     @AfterEach
     public void resetMessage() {
-        message = new BlizzardMessage(2048, new BlizzardRequest());
+        message = new BlizzardMessage(2048, 20);
     }
 
     @Test
@@ -24,7 +24,7 @@ public class BlizzardMessageBodyTest {
                 "\r\n\r\nThis is the body, bitch");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(23, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
         assertEquals("23", message.getRequest().getHeader("content-length"));
         assertEquals("yay", message.getRequest().getHeader("other-header"));
@@ -37,9 +37,9 @@ public class BlizzardMessageBodyTest {
         reqStrings.add(" header: this header is irrelevant\r\n\r");
         reqStrings.add("\nThis is the body.");
         message.setReqStrings(reqStrings);
-        message.setContentLength(17);
+        message.setRemainingByteCount(17);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(17, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("This is the body.", message.getRequest().getBody());
     }
 
@@ -49,9 +49,9 @@ public class BlizzardMessageBodyTest {
         reqStrings.add(" header: this header is irrelevant\r\n");
         reqStrings.add("\r\nThis is the body.");
         message.setReqStrings(reqStrings);
-        message.setContentLength(17);
+        message.setRemainingByteCount(17);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(17, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("This is the body.", message.getRequest().getBody());
     }
 
@@ -61,9 +61,9 @@ public class BlizzardMessageBodyTest {
         reqStrings.add(" header: this header is irrelevant\r");
         reqStrings.add("\n\r\nThis is the body. yooo");
         message.setReqStrings(reqStrings);
-        message.setContentLength(22);
+        message.setRemainingByteCount(22);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(22, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("This is the body. yooo", message.getRequest().getBody());
         assertEquals("this header is irrelevant", message.getRequest().getHeader("header"));
     }
@@ -76,9 +76,9 @@ public class BlizzardMessageBodyTest {
         reqStrings.add("\r");
         reqStrings.add("\nThis is the body.");
         message.setReqStrings(reqStrings);
-        message.setContentLength(17);
+        message.setRemainingByteCount(17);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(17, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("This is the body.", message.getRequest().getBody());
     }
 
@@ -89,9 +89,9 @@ public class BlizzardMessageBodyTest {
         reqStrings.add("\n");
         reqStrings.add("\r\nThis is the body.");
         message.setReqStrings(reqStrings);
-        message.setContentLength(17);
+        message.setRemainingByteCount(17);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(17, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("This is the body.", message.getRequest().getBody());
     }
 
@@ -103,15 +103,13 @@ public class BlizzardMessageBodyTest {
         reqStrings.add("\r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0,0});
-        assertTrue(testHeaderIntoBody(-42069, true));
+        assertTrue(testHeaderIntoBody(true));
         assertEquals("", message.getRequest().getBody());
     }
 
-    public boolean testHeaderIntoBody(int clExpected, boolean rSet) throws BadRequestException {
+    public boolean testHeaderIntoBody(boolean rSet) throws BadRequestException {
         if (rSet) message.getRequest().setRequestLine(new String[] {"GET", "/", "1.1"});
-        boolean val = message.parseHeader();
-        assertEquals(clExpected, message.getContentLength());
-        return val;
+        return message.parseHeader();
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.bencullivan.blizzard.http;
 
+import com.bencullivan.blizzard.http.exceptions.BadRequest;
+
 import java.util.HashMap;
 
 /**
@@ -8,11 +10,12 @@ import java.util.HashMap;
  */
 public class BlizzardRequest {
 
-    private final String DEFAULT_RETURN_VAL = "none";  // returned when a request line field is missing
-    private final HashMap<String, String> headers;  // contains all of the header fields mapped to their values
+    private String DEFAULT_RETURN_VAL = "none";  // returned when a request line field is missing
+    private HashMap<String, String> headers;  // contains all of the header fields mapped to their values
     private String[] requestLine;  // contains the three parts of the request line
     private StringBuffer body;  // contains the body of the message
     private boolean badRequest;  // whether this http request is a bad request
+    private BadRequest badRequestType; // the type of bad request that this is
 
     public BlizzardRequest() {
         requestLine = new String[0];
@@ -94,8 +97,16 @@ public class BlizzardRequest {
      * Sets whether this request is bad.
      * @param badRequest Whether this request is bad.
      */
-    void setBadRequest(boolean badRequest) {
+    public void setBadRequest(boolean badRequest) {
         this.badRequest = badRequest;
+    }
+
+    /**
+     * Sets the type of bad request that this request is.
+     * @param badRequestType The type of bad request.
+     */
+    public void setBadRequestType(BadRequest badRequestType) {
+        this.badRequestType = badRequestType;
     }
 
     /**
@@ -103,5 +114,15 @@ public class BlizzardRequest {
      */
     public boolean isBadRequest() {
         return badRequest;
+    }
+
+    /**
+     * Frees this request's data for garbage collection.
+     */
+    public void clear() {
+        DEFAULT_RETURN_VAL = null;
+        headers = null;
+        requestLine = null;
+        body = null;
     }
 }

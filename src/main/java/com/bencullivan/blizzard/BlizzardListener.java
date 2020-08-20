@@ -2,6 +2,7 @@ package com.bencullivan.blizzard;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -14,7 +15,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 class BlizzardListener implements Runnable {
 
     private final int PORT;
-    private final ArrayBlockingQueue<SocketChannel> acceptedChannels;
+    private ArrayBlockingQueue<SocketChannel> acceptedChannels;
     private ServerSocketChannel serverSocketChannel;
 
     /**
@@ -34,7 +35,7 @@ class BlizzardListener implements Runnable {
     private void openChannel() throws IOException {
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(PORT));
-        serverSocketChannel.configureBlocking(false);
+        serverSocketChannel.configureBlocking(true);
     }
 
     @Override
@@ -43,15 +44,18 @@ class BlizzardListener implements Runnable {
         try {
             openChannel();
         } catch (IOException e) {
+            System.out.println("Server stopped listening.");
+            e.printStackTrace();
             return;
         }
 
-        // begin the accepting loop
+        // begin the listening loop
         while (true) {
             try {
                 // attempt to accept a new connection
                 SocketChannel channel = serverSocketChannel.accept();
                 if (channel == null) continue;
+                // queue the connection
                 acceptedChannels.put(channel);
             } catch (IOException e) {
                 if (e instanceof ClosedChannelException) {
@@ -60,10 +64,18 @@ class BlizzardListener implements Runnable {
                         openChannel();
                     } catch (IOException e2) {
                         // if the attempt to open a new channel fails, stop execution
+                        System.out.println("Server stopped listening.");
+                        e2.printStackTrace();
                         return;
                     }
+                } else {
+                    System.out.println("Server stopped listening.");
+                    e.printStackTrace();
+                    return;
                 }
             } catch (InterruptedException | SecurityException e) {
+                System.out.println("Server stopped listening.");
+                e.printStackTrace();
                 return;
             }
         }

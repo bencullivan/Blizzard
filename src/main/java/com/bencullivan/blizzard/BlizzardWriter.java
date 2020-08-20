@@ -1,6 +1,6 @@
 package com.bencullivan.blizzard;
 
-public class BlizzardWriter {
+class BlizzardWriter {
     public void write() {
 
     }

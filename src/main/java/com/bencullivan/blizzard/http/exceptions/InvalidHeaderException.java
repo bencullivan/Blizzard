@@ -6,6 +6,6 @@ package com.bencullivan.blizzard.http.exceptions;
  */
 public class InvalidHeaderException extends BadRequestException {
     public InvalidHeaderException() {
-        super("Invalid header.");
+        super("Invalid header.", BadRequest.INVALID_HEADER);
     }
 }

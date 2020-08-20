@@ -6,6 +6,6 @@ package com.bencullivan.blizzard.http.exceptions;
  */
 public class ContentLengthMissingException extends BadRequestException {
     public ContentLengthMissingException() {
-        super("Content length is not specified but there is a body.");
+        super("Content length is not specified but there is a body.", BadRequest.CONTENT_LENGTH_MISSING);
     }
 }

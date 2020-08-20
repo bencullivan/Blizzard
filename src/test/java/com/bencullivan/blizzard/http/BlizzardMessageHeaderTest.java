@@ -9,11 +9,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BlizzardMessageHeaderTest {
 
-    private BlizzardMessage message = new BlizzardMessage(2048, new BlizzardRequest());
+    private BlizzardMessage message = new BlizzardMessage(2048, 20);
 
     @AfterEach
     public void resetMessage() {
-        message = new BlizzardMessage(2048, new BlizzardRequest());
+        message = new BlizzardMessage(2048, 20);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class BlizzardMessageHeaderTest {
         reqStrings.add(" 1568 \r\n Other-header: yay \r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0, 2});
-        splitHeaderGoodInput(0, 6, 1568);
+        splitHeaderGoodInput(0, 6);
         assertEquals("1568", message.getRequest().getHeader("content-length"));
     }
 
@@ -126,13 +126,12 @@ public class BlizzardMessageHeaderTest {
         reqStrings.add("\r\n COOKIE: yum yum tasty cookies \r\n Other-header: yay \r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0, 2});
-        splitHeaderGoodInput(2, 33, -42069);
+        splitHeaderGoodInput(2, 33);
         assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
     }
 
-    public void splitHeaderGoodInput(int start, int i, int clExpected) throws BadRequestException {
+    public void splitHeaderGoodInput(int start, int i) throws BadRequestException {
         message.splitHeader(start, i);
-        assertEquals(clExpected, message.getContentLength());
     }
 
     @Test
@@ -141,7 +140,7 @@ public class BlizzardMessageHeaderTest {
         reqStrings.add(" COOKIE: yum yum tasty cookies \r\n Other-header:yay \r\n   ");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {0,0});
-        assertFalse(parseHeaderGoodInput(new int[] {0, 53}, -42069, true));
+        assertFalse(parseHeaderGoodInput(new int[] {0, 53}, true));
         assertEquals("yay", message.getRequest().getHeader("other-header"));
         assertEquals("yum yum tasty cookies", message.getRequest().getHeader("cookie"));
     }
@@ -154,7 +153,7 @@ public class BlizzardMessageHeaderTest {
         reqStrings.add("\n  First-header:  first val \r\n second-header:second val \r\n");
         message.setReqStrings(reqStrings);
         message.setStartIndexes(new int[] {2, 1});
-        assertFalse(parseHeaderGoodInput(new int[] {2, 58}, -42069, false));
+        assertFalse(parseHeaderGoodInput(new int[] {2, 58}, false));
         assertEquals("GET", message.getRequest().getMethod());
         assertEquals("/", message.getRequest().getUri());
         assertEquals("2", message.getRequest().getVersion());
@@ -162,12 +161,11 @@ public class BlizzardMessageHeaderTest {
         assertEquals("second val", message.getRequest().getHeader("second-header"));
     }
 
-    public boolean parseHeaderGoodInput(int[] sExpected, int clExpected, boolean rSet)
+    public boolean parseHeaderGoodInput(int[] sExpected, boolean rSet)
             throws BadRequestException {
         if (rSet) message.getRequest().setRequestLine(new String[] {"GET", "/", "1.1"});
         boolean val = message.parseHeader();
         assertArrayEquals(sExpected, message.getStartIndexes());
-        assertEquals(clExpected, message.getContentLength());
         return val;
     }
 }

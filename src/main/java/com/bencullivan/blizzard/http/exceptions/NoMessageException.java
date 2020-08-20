@@ -6,6 +6,6 @@ package com.bencullivan.blizzard.http.exceptions;
  */
 public class NoMessageException extends BadRequestException {
     public NoMessageException() {
-        super("No message.");
+        super("No message.", BadRequest.NO_MESSAGE);
     }
 }

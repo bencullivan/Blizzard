@@ -6,6 +6,6 @@ package com.bencullivan.blizzard.http.exceptions;
  */
 public class IllegalCharException extends BadRequestException {
     public IllegalCharException() {
-        super("Illegal character present in request line.");
+        super("Illegal character present in request line.", BadRequest.ILLEGAL_CHAR);
     }
 }

@@ -34,21 +34,25 @@ public class Requests {
             "username=zurfyx&pass=password";
     static byte[][] getB1() {
         return new byte[][] {
-                b.substring(0, 20).getBytes(),
+                b.substring(0, 20).getBytes(StandardCharsets.UTF_8),
                 new byte[0],
-                b.substring(20, b.length()-20).getBytes(),
-                b.substring(b.length()-20).getBytes()
+                b.substring(20, b.length()-20).getBytes(StandardCharsets.UTF_8),
+                b.substring(b.length()-20).getBytes(StandardCharsets.UTF_8)
         };
     }
     static byte[][] getB2() {
         return new byte[][]{
-                b.getBytes()
+                b.getBytes(StandardCharsets.UTF_8)
         };
     }
     static byte[][] getB3() {
         return new byte[][] {
-                b.substring(0, 42).getBytes(),
-                b.substring(42).getBytes()
+                b.substring(0, 42).getBytes(StandardCharsets.UTF_8),
+                b.substring(42).getBytes(StandardCharsets.UTF_8)
         };
+    }
+
+    static byte[] getHeaderTooLarge() {
+        return ("GET / HTTP/1.1\r\n header:" + "f".repeat(8400)).getBytes(StandardCharsets.UTF_8);
     }
 }

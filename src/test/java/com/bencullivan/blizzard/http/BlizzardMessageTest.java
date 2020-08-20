@@ -1,18 +1,19 @@
 package com.bencullivan.blizzard.http;
 
-import com.bencullivan.blizzard.http.exceptions.BadRequestException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import com.bencullivan.blizzard.http.exceptions.*;
+import org.junit.jupiter.api.*;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BlizzardMessageTest {
 
-    private BlizzardMessage message = new BlizzardMessage(2048, new BlizzardRequest());
+    private BlizzardMessage message = new BlizzardMessage(2048, 20);
 
     @AfterEach
     public void resetMessage() {
-        message = new BlizzardMessage(2048, new BlizzardRequest());
+        message = new BlizzardMessage(2048, 20);
     }
 
     @Test
@@ -118,5 +119,21 @@ public class BlizzardMessageTest {
         assertEquals("application/x-www-form-urlencoded", r.getHeader("content-type"));
         assertEquals("29", r.getHeader("content-length"));
         assertEquals("username=zurfyx&pass=password", r.getBody());
+    }
+
+    @Test
+    public void messageHeaderTooLargeTest() throws BadRequestException {
+        byte[] large = Requests.getHeaderTooLarge();
+        int i = 0;
+        while (i < 8000) {
+            message.getCurrent().put(Arrays.copyOfRange(large, i, i + 2000));
+            message.isDoneProcessing();
+            i += 2000;
+        }
+        message.getCurrent().put(Arrays.copyOfRange(large, i, large.length));
+        assertThrows(
+                HeadersTooLargeException.class,
+                () -> message.isDoneProcessing()
+        );
     }
 }
