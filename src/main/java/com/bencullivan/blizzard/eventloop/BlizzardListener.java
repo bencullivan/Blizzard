@@ -1,8 +1,9 @@
-package com.bencullivan.blizzard;
+package com.bencullivan.blizzard.eventloop;
+
+import com.bencullivan.blizzard.BlizzardStore;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
@@ -10,12 +11,12 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Handles accepting new connections on a port specified by the user
- * @author bencullivan
+ * @author Ben Cullivan (2020)
  */
-class BlizzardListener implements Runnable {
+public class BlizzardListener implements Runnable {
 
     private final int PORT;
-    private ArrayBlockingQueue<SocketChannel> acceptedChannels;
+    private final ArrayBlockingQueue<SocketChannel> acceptedChannels;
     private ServerSocketChannel serverSocketChannel;
 
     /**

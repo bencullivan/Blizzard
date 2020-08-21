@@ -28,7 +28,7 @@ public class BlizzardMessageTest {
         BlizzardRequest r = message.getRequest();
         assertEquals("GET", r.getMethod());
         assertEquals("/posts/first", r.getUri());
-        assertEquals("1.1", r.getVersion());
+        assertEquals("HTTP/1.1", r.getVersion());
         assertEquals("www.test101.com", r.getHeader("host"));
         assertEquals("en-us", r.getHeader("accept-language"));
         assertEquals("Mozilla/4.0", r.getHeader("user-agent"));
@@ -50,7 +50,7 @@ public class BlizzardMessageTest {
         BlizzardRequest r = message.getRequest();
         assertEquals("POST", r.getMethod());
         assertEquals("/pass.php", r.getUri());
-        assertEquals("1.1", r.getVersion());
+        assertEquals("HTTP/1.1", r.getVersion());
         assertEquals("127.0.0.1", r.getHeader("host"));
         assertEquals("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0",
                 r.getHeader("user-agent"));
@@ -75,7 +75,7 @@ public class BlizzardMessageTest {
         BlizzardRequest r = message.getRequest();
         assertEquals("POST", r.getMethod());
         assertEquals("/pass.php", r.getUri());
-        assertEquals("1.1", r.getVersion());
+        assertEquals("HTTP/1.1", r.getVersion());
         assertEquals("127.0.0.1", r.getHeader("host"));
         assertEquals("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0",
                 r.getHeader("user-agent"));
@@ -103,7 +103,7 @@ public class BlizzardMessageTest {
         BlizzardRequest r = message.getRequest();
         assertEquals("POST", r.getMethod());
         assertEquals("/pass.php", r.getUri());
-        assertEquals("1.1", r.getVersion());
+        assertEquals("HTTP/1.1", r.getVersion());
         assertEquals("127.0.0.1", r.getHeader("host"));
         assertEquals("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:18.0) Gecko/20100101 Firefox/18.0",
                 r.getHeader("user-agent"));

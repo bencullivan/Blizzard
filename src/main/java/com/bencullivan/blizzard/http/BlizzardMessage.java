@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -16,11 +15,12 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class BlizzardMessage {
 
+    private final BlizzardAttachment ATTACHMENT;  // the object containing this message and its corresponding
+    // outgoing message
     private final int UNKNOWN;  // representing an unknown number
     private final char[] CRLF;  // carriage return line feed
     private final int MAX_HEADER_SIZE;  // the maximum header size
     private final int HEADER_BUFFER_SIZE;  // the size of a header buffer
-    private final Queue<Long> q;
     private final ArrayBlockingQueue<Long> threadQueue;
 
     private BlizzardRequest request; // the object containing this http request
@@ -33,15 +33,17 @@ public class BlizzardMessage {
     private ByteBuffer bodyBuffer;  // a buffer that will accept incoming body bytes
 
     /**
+     * @param attachment The object containing this message and its corresponding outgoing message.
      * @param headerBufferSize The desired size (in bytes) of the header buffer of this message. (*A smaller header
      *                         buffer will incur a lower memory overhead but may result in slower performance.)
+     * @param processorCount The number of processor threads.
      */
-    public BlizzardMessage(int headerBufferSize, int processorCount) {
+    public BlizzardMessage(BlizzardAttachment attachment, int headerBufferSize, int processorCount) {
+        ATTACHMENT = attachment;
         UNKNOWN = -42069;
         CRLF = new char[] {'\r', '\n'};
         MAX_HEADER_SIZE = 8192;
         HEADER_BUFFER_SIZE = headerBufferSize;
-        q = new LinkedList<>();
         threadQueue = new ArrayBlockingQueue<>(processorCount+1, true);
         restoreInitialValues();
     }
@@ -50,7 +52,7 @@ public class BlizzardMessage {
      * Sets/Restores this message's initial state.
      */
     public void restoreInitialValues() {
-        request = new BlizzardRequest();
+        request = new BlizzardRequest(ATTACHMENT);
         reqStrings = new ArrayList<>();
         startIndexes = new int[2];
         remainingByteCount = UNKNOWN;

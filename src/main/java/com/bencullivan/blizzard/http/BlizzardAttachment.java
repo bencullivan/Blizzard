@@ -1,28 +1,27 @@
 package com.bencullivan.blizzard.http;
 
+/**
+ * Stores the BlizzardMessage and BlizzardOutgoingMessage corresponding to a given SocketChannel.
+ * @author Ben Cullivan (2020)
+ */
 public class BlizzardAttachment {
 
     private BlizzardMessage message;
-    private BlizzardRequest request;
-
-    public BlizzardAttachment(BlizzardMessage message, BlizzardRequest request) {
-        this.message = message;
-        this.request = request;
-    }
+    private BlizzardOutgoingMessage outMessage;
 
     public BlizzardMessage getMessage() {
         return message;
     }
 
-    public BlizzardRequest getRequest() {
-        return request;
+    public BlizzardOutgoingMessage getOutMessage() {
+        return outMessage;
     }
 
     public void setMessage(BlizzardMessage message) {
         this.message = message;
     }
 
-    public void setRequest(BlizzardRequest request) {
-        this.request = request;
+    public void setOutMessage(BlizzardOutgoingMessage outMessage) {
+        this.outMessage = outMessage;
     }
 }

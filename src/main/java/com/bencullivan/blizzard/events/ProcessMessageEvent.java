@@ -1,4 +1,4 @@
-package com.bencullivan.blizzard;
+package com.bencullivan.blizzard.events;
 
 import com.bencullivan.blizzard.http.BlizzardMessage;
 import com.bencullivan.blizzard.http.BlizzardRequest;
@@ -6,10 +6,20 @@ import com.bencullivan.blizzard.http.exceptions.BadRequestException;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
+/**
+ * Processes a BlizzardMessage by parsing the bytes that were read into it into a BlizzardRequest.
+ * This class's execute method is always run on a processor thread.
+ * @author Ben Cullivan (2020)
+ */
 public class ProcessMessageEvent implements Event {
+
     private final BlizzardMessage message;
     private final ArrayBlockingQueue<BlizzardRequest> requestQueue;
 
+    /**
+     * @param message The message to be processed.
+     * @param requestQueue The queue of requests that are ready to be processed.
+     */
     public ProcessMessageEvent(BlizzardMessage message, ArrayBlockingQueue<BlizzardRequest> requestQueue) {
         this.message = message;
         this.requestQueue = requestQueue;

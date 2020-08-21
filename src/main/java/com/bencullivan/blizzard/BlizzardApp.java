@@ -1,5 +1,7 @@
 package com.bencullivan.blizzard;
 
+import com.bencullivan.blizzard.events.RouteCallback;
+
 public class BlizzardApp implements App {
 
     protected BlizzardServer app;

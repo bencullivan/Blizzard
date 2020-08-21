@@ -10,18 +10,36 @@ import java.util.HashMap;
  */
 public class BlizzardRequest {
 
+    private BlizzardAttachment ATTACHMENT;  // the object that contains the message and outgoing message that are
+    // used for channel reading and writing
     private String DEFAULT_RETURN_VAL = "none";  // returned when a request line field is missing
     private HashMap<String, String> headers;  // contains all of the header fields mapped to their values
+    private HashMap<String, String> queries;  // contains all of the url queries
     private String[] requestLine;  // contains the three parts of the request line
     private StringBuffer body;  // contains the body of the message
+    private String param;  // the route parameters, if there are any
     private boolean badRequest;  // whether this http request is a bad request
     private BadRequest badRequestType; // the type of bad request that this is
 
-    public BlizzardRequest() {
+    /**
+     * @param attachment The object containing the BlizzardMessage, and the BlizzardOutgoingMessage corresponding to the
+     *                   channel that this request came from.
+     */
+    public BlizzardRequest(BlizzardAttachment attachment) {
+        ATTACHMENT = attachment;
         requestLine = new String[0];
         headers = new HashMap<>();
+        queries = new HashMap<>();
         body = new StringBuffer();
         badRequest = false;
+        badRequestType = null;
+    }
+
+    /**
+     * @return A reference to the BlizzardAttachment object corresponding to the channel that this request came from.
+     */
+    public BlizzardAttachment getAttachment() {
+        return ATTACHMENT;
     }
 
     /**
@@ -50,7 +68,7 @@ public class BlizzardRequest {
      * @return The http version of this request. e.g. "1.1", "2"
      */
     public String getVersion() {
-        return requestLine.length < 3 || requestLine[2].length() < 6 ? DEFAULT_RETURN_VAL : requestLine[2].substring(5);
+        return requestLine.length < 3 ? DEFAULT_RETURN_VAL : requestLine[2];
     }
 
     /**
@@ -93,6 +111,14 @@ public class BlizzardRequest {
         return body.toString();
     }
 
+    public void setParameter(String parameter) {
+        param = parameter;
+    }
+
+    public String getParameter() {
+        return param;
+    }
+
     /**
      * Sets whether this request is bad.
      * @param badRequest Whether this request is bad.
@@ -117,6 +143,13 @@ public class BlizzardRequest {
     }
 
     /**
+     * @return The type of BadRequest.
+     */
+    public BadRequest getBadRequestType() {
+        return badRequestType;
+    }
+
+    /**
      * Frees this request's data for garbage collection.
      */
     public void clear() {
@@ -124,5 +157,27 @@ public class BlizzardRequest {
         headers = null;
         requestLine = null;
         body = null;
+    }
+
+    /**
+     * Adds any url queries to the map of queries.
+     */
+    public void processQuery() {
+        // make sure there is a body, if the body is json, then there are no queries
+        if (body.length() <= 0 || body.charAt(0) == '{' || body.charAt(0) == '[') return;
+        String[] queries = body.toString().split("&");
+        if (queries.length == 1) return;
+        for (String query: queries) {
+            String[] parsed = query.split("=");
+            if (parsed.length != 2) continue;
+            this.queries.put(parsed[0], parsed[1]);
+        }
+    }
+
+    /**
+     * Parses a JSON body into an object that can be accessed by the user.
+     */
+    public void processJSON() {
+
     }
 }

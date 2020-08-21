@@ -1,5 +1,7 @@
 package com.bencullivan.blizzard;
 
+import com.bencullivan.blizzard.events.Event;
+
 import java.util.concurrent.ArrayBlockingQueue;
 
 public class Processor implements Runnable {
