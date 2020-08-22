@@ -1,6 +1,8 @@
 package com.bencullivan.blizzard.http;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectionKey;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -9,13 +11,20 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class BlizzardOutgoingMessage {
 
+    private final BlizzardAttachment ATTACHMENT;  // the object storing the channel and write selector
     private final ArrayBlockingQueue<BlizzardResponse> responses;  // the queue of responses that are ready to be sent
     // through this outgoing message's channel
     private BlizzardResponse current;  // the response that is currently being sent
     private int remainingBytes;  // the number of bytes remaining in the current response
+    private boolean writeRegistered;
 
-    public BlizzardOutgoingMessage() {
+    /**
+     * @param attachment The object that stores the socket channel and write selector.
+     */
+    public BlizzardOutgoingMessage(BlizzardAttachment attachment) {
+        ATTACHMENT = attachment;
         responses = new ArrayBlockingQueue<>(50);
+        writeRegistered = false;
     }
 
     /**
@@ -33,11 +42,40 @@ public class BlizzardOutgoingMessage {
     }
 
     /**
+     * Adds a response to the queue of responses waiting to be written. Registers this channel with the write selector
+     * if it is not already registered. This method is synchronized because it will always be called from the processor
+     * pool.
+     * @param response The response to be added to the queue.
+     */
+    public synchronized void addResponse(BlizzardResponse response) {
+        try {
+            responses.put(response);
+            // register with the selector if non already registered
+            if (!writeRegistered) {
+                try {
+                    ATTACHMENT.getChannel().register(ATTACHMENT.getWriteSelector(), SelectionKey.OP_WRITE, ATTACHMENT);
+                    writeRegistered = true;
+                } catch (ClosedChannelException e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * @return The response that is currently being sent.
      */
     public ByteBuffer getCurrent() {
-        if (responses.isEmpty()) return null;
-        if (current == null) {
+        if (current == null && responses.isEmpty()) {
+            // if there are no responses waiting to be written, unregister this channel with the selector
+            SelectionKey key = ATTACHMENT.getChannel().keyFor(ATTACHMENT.getWriteSelector());
+            if (key != null) key.cancel();
+            writeRegistered = false;
+            return null;
+        }
+        else if (current == null) {
             current = responses.poll();
             remainingBytes = current.getMessage().array().length;
         }
@@ -53,6 +91,12 @@ public class BlizzardOutgoingMessage {
     public void updateRemaining(int bytesRead) {
         if ((remainingBytes -= bytesRead) <= 0) {
             current = responses.poll();
+            if (current == null) {
+                // if there are no responses waiting to be written, unregister this channel with the selector
+                SelectionKey key = ATTACHMENT.getChannel().keyFor(ATTACHMENT.getWriteSelector());
+                if (key != null) key.cancel();
+                writeRegistered = false;
+            }
         }
     }
 }

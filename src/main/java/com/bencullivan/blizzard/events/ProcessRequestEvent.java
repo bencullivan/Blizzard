@@ -1,7 +1,7 @@
 package com.bencullivan.blizzard.events;
 
-import com.bencullivan.blizzard.BlizzardStore;
-import com.bencullivan.blizzard.PathNode;
+import com.bencullivan.blizzard.util.BlizzardStore;
+import com.bencullivan.blizzard.util.PathNode;
 import com.bencullivan.blizzard.http.BlizzardRequest;
 import com.bencullivan.blizzard.http.BlizzardResponse;
 
@@ -43,6 +43,7 @@ public class ProcessRequestEvent implements Event {
         // if the request is bad, update the response accordingly
         if (request.isBadRequest()) {
             response.sendStatus(switch (request.getBadRequestType()) {
+                case SERVER_ERROR -> 500;
                 case CONTENT_LENGTH_MISSING -> 411;
                 case HEADERS_TOO_LARGE -> 413;
                 default -> 400;
@@ -79,18 +80,14 @@ public class ProcessRequestEvent implements Event {
             }
             return;
         }
-        // process the route parameter and query string
+        // process the route parameter and request body
         if (root.hasParams()) request.setParameter(path[path.length-1]);
-        request.processQuery();
+        request.processBody();
         // call the user-defined callback
         if (root.getCallback() != null) root.getCallback().call(request, response);
         // perform cleanup and convert the response to a bytebuffer
         response.finish();
         // the response is ready for writing
-        try {
-            request.getAttachment().getOutMessage().getResponses().put(response);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        request.getAttachment().getOutMessage().addResponse(response);
     }
 }

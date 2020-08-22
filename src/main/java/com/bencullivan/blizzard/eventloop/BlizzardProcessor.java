@@ -1,6 +1,6 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.BlizzardStore;
+import com.bencullivan.blizzard.util.BlizzardStore;
 import com.bencullivan.blizzard.events.Event;
 import com.bencullivan.blizzard.events.ProcessRequestEvent;
 import com.bencullivan.blizzard.http.BlizzardRequest;

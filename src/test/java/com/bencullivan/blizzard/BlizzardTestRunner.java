@@ -1,8 +1,7 @@
 package com.bencullivan.blizzard;
 
-import com.bencullivan.blizzard.http.BlizzardMessageBodyTest;
-import com.bencullivan.blizzard.http.BlizzardMessageHeaderTest;
-import com.bencullivan.blizzard.http.BlizzardMessageTest;
+import com.bencullivan.blizzard.http.*;
+import com.bencullivan.blizzard.util.BlizzardStoreTest;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
@@ -25,7 +24,10 @@ public class BlizzardTestRunner {
         List<DiscoverySelector> tests = new ArrayList<>(Arrays.asList(
                 DiscoverySelectors.selectClass(BlizzardMessageHeaderTest.class),
                 DiscoverySelectors.selectClass(BlizzardMessageBodyTest.class),
-                DiscoverySelectors.selectClass(BlizzardMessageTest.class)
+                DiscoverySelectors.selectClass(BlizzardMessageTest.class),
+                DiscoverySelectors.selectClass(BlizzardRequestTest.class),
+                DiscoverySelectors.selectClass(BlizzardResponseTest.class),
+                DiscoverySelectors.selectClass(BlizzardStoreTest.class)
         ));
         SummaryGeneratingListener listener = new SummaryGeneratingListener();
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request().selectors(tests).build();

@@ -1,6 +1,6 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.BlizzardStore;
+import com.bencullivan.blizzard.util.BlizzardStore;
 import com.bencullivan.blizzard.http.BlizzardAttachment;
 import com.bencullivan.blizzard.http.BlizzardMessage;
 import com.bencullivan.blizzard.http.BlizzardOutgoingMessage;
@@ -17,19 +17,23 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class BlizzardAcceptor {
 
-    private final Selector selector;  // the read Selector
+    private final Selector readSelector;  // the read Selector
+    private final Selector writeSelector;  // the write Selector
     private final ArrayBlockingQueue<SocketChannel> acceptedChannels;  // the newly selected SocketChannels
     private final int PROCESSOR_COUNT;  // the number of processor threads
     private final int HB_SIZE;  // the size of the header buffer in a BlizzardMessage
 
     /**
-     * @param selector The read Selector.
+     * @param readSelector The Selector that chooses which channels are ready to be read from.
+     * @param writeSelector The Selector that chooses which channels are ready to be written to.
      * @param store The BlizzardStore containing the concurrent queues.
      * @param processorCount The number of processor threads.
      * @param hbSize The size of the header buffer in a BlizzardMessage.
      */
-    public BlizzardAcceptor(Selector selector, BlizzardStore store, int processorCount, int hbSize) {
-        this.selector = selector;
+    public BlizzardAcceptor(Selector readSelector, Selector writeSelector, BlizzardStore store,
+                            int processorCount, int hbSize) {
+        this.readSelector = readSelector;
+        this.writeSelector = writeSelector;
         acceptedChannels = store.getAcceptedChannelQueue();
         PROCESSOR_COUNT = processorCount;
         HB_SIZE = hbSize;
@@ -45,11 +49,12 @@ public class BlizzardAcceptor {
         while (channel != null) {
             try {
                 channel.configureBlocking(false);
-                SelectionKey key = channel.register(selector, SelectionKey.OP_READ);
                 BlizzardAttachment attachment = new BlizzardAttachment();
+                attachment.setChannel(channel);
+                attachment.setWriteSelector(writeSelector);
                 attachment.setMessage(new BlizzardMessage(attachment, HB_SIZE, PROCESSOR_COUNT));
-                attachment.setOutMessage(new BlizzardOutgoingMessage());
-                key.attach(attachment);
+                attachment.setOutMessage(new BlizzardOutgoingMessage(attachment));
+                channel.register(readSelector, SelectionKey.OP_READ, attachment);
             } catch (IOException e) {
                 System.out.println("Unable to configure nonblocking channel:");
                 e.printStackTrace();

@@ -1,6 +1,6 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.BlizzardStore;
+import com.bencullivan.blizzard.util.BlizzardStore;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

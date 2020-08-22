@@ -1,7 +1,8 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.*;
 import com.bencullivan.blizzard.events.Event;
+import com.bencullivan.blizzard.util.BlizzardStore;
+import com.bencullivan.blizzard.util.Processor;
 
 import java.nio.channels.Selector;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -20,16 +21,18 @@ public class BlizzardEventLoop {
     private final int PROCESSOR_COUNT; // the number of processor threads
 
     /**
-     * @param readerSelector The selector that selects which SocketChannels are able to be read from.
+     * @param readSelector The Selector that selects which SocketChannels are able to be read from.
+     * @param writeSelector The Selector that selects which SocketChannels are able to be written to.
      * @param store The BlizzardStore that stores all of the queues.
      * @param processorCount The number of processor threads.
      * @param hbSize The size of the header buffer in a BlizzardMessage.
      */
-    public BlizzardEventLoop(Selector readerSelector, BlizzardStore store, int processorCount, int hbSize) {
-        acceptor = new BlizzardAcceptor(readerSelector, store, processorCount, hbSize);
-        reader = new BlizzardReader(readerSelector, store);
+    public BlizzardEventLoop(Selector readSelector, Selector writeSelector, BlizzardStore store,
+                             int processorCount, int hbSize) {
+        acceptor = new BlizzardAcceptor(readSelector, writeSelector, store, processorCount, hbSize);
+        reader = new BlizzardReader(readSelector, store);
         processor = new BlizzardProcessor(store);
-        writer = new BlizzardWriter();
+        writer = new BlizzardWriter(writeSelector);
         eventQueue = store.getEventQueue();
         PROCESSOR_COUNT = processorCount;
     }

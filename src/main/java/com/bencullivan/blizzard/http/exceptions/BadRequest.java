@@ -10,5 +10,6 @@ public enum BadRequest {
     ILLEGAL_CHAR,
     INVALID_HEADER,
     NO_MESSAGE,
-    REQUEST_LINE
+    REQUEST_LINE,
+    SERVER_ERROR
 }

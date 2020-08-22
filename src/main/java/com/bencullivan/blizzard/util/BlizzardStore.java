@@ -1,4 +1,4 @@
-package com.bencullivan.blizzard;
+package com.bencullivan.blizzard.util;
 
 import com.bencullivan.blizzard.events.Event;
 import com.bencullivan.blizzard.events.RouteCallback;
@@ -10,7 +10,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Stores data that must be accessible to all threads.
- * @author Ben Cullivan
+ * @author Ben Cullivan (2020)
  */
 public class BlizzardStore {
 
@@ -201,40 +201,65 @@ public class BlizzardStore {
         curr.setCallback(callback);
     }
 
-    // GETTERS
-
+    /**
+     * @return The queue containing newly accepted SocketChannels.
+     */
     public ArrayBlockingQueue<SocketChannel> getAcceptedChannelQueue() {
         return acceptedChannelQueue;
     }
 
+    /**
+     * @return The queue containing events that are waiting to be executed.
+     */
     public ArrayBlockingQueue<Event> getEventQueue() {
         return eventQueue;
     }
 
+    /**
+     * @return The queue containing BlizzardRequests that are waiting to be processed.
+     */
     public ArrayBlockingQueue<BlizzardRequest> getRequestQueue() {
         return requestQueue;
     }
 
+    /**
+     * @return The map containing the reasons for sending various http status codes.
+     */
     public HashMap<Integer, String> getReasonPhrases() {
         return reasonPhrases;
     }
 
+    /**
+     * @return The root of the trie that contains the POST routes.
+     */
     public PathNode getPostRoot() {
         return postRoot;
     }
 
+    /**
+     * @return The root of the trie that contains the GET routes.
+     */
     public PathNode getGetRoot() {
         return getRoot;
     }
 
+    /**
+     * @return The root of the trie that contains the PUT routes.
+     */
     public PathNode getPutRoot() {
         return putRoot;
     }
 
+    /**
+     * @return The root of the trie that contains the PATCH routes.
+     */
     public PathNode getPatchRoot() {
         return patchRoot;
     }
 
+    /**
+     * @return The root of the trie that contains the DELETE routes.
+     */
     public PathNode getDeleteRoot() {
         return deleteRoot;
     }

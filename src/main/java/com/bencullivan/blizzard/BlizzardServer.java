@@ -3,6 +3,7 @@ package com.bencullivan.blizzard;
 import com.bencullivan.blizzard.eventloop.BlizzardEventLoop;
 import com.bencullivan.blizzard.eventloop.BlizzardListener;
 import com.bencullivan.blizzard.events.RouteCallback;
+import com.bencullivan.blizzard.util.BlizzardStore;
 
 import java.io.IOException;
 import java.nio.channels.Selector;
@@ -84,7 +85,7 @@ public class BlizzardServer {
     }
 
     /**
-     * Creates the event loop and listener and listens on the specified port.
+     * Starts the event loop and listens on the specified port.
      * @param port The port to listen on.
      */
     public void listen(int port) {
@@ -92,15 +93,21 @@ public class BlizzardServer {
         BlizzardListener listener = new BlizzardListener(port, STORE);
 
         // create the reader selector that will select channels that can be read from
+        // and the write selector that will select channels that can be written to
         Selector readerSelector;
+        Selector writeSelector;
         try {
             readerSelector = Selector.open();
+            writeSelector = Selector.open();
         } catch (IOException e) {
             System.out.println("There was an error listening on port " + port);
             return;
         }
+
         // create the event loop that will handle message reading, writing, and processing on the main thread
-        BlizzardEventLoop eventLoop = new BlizzardEventLoop(readerSelector, STORE, PROCESSOR_COUNT, HB_SIZE);
+        BlizzardEventLoop eventLoop = new BlizzardEventLoop(readerSelector, writeSelector, STORE,
+                PROCESSOR_COUNT, HB_SIZE);
+
         // create the processor pool
         eventLoop.createProcessorPool();
 
@@ -114,6 +121,9 @@ public class BlizzardServer {
         eventLoop.start();
     }
 
+    /**
+     * Starts the event loop and listens on the default port.
+     */
     public void listen() {
         listen(DEFAULT_PORT);
     }

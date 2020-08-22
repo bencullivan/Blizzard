@@ -1,4 +1,4 @@
-package com.bencullivan.blizzard;
+package com.bencullivan.blizzard.util;
 
 import com.bencullivan.blizzard.events.RouteCallback;
 
@@ -14,7 +14,7 @@ public class PathNode {
     private RouteCallback callback;
     private boolean hasParams;
     private PathNode paramNode;
-    String paramName;
+    private String paramName;
 
     public PathNode() {
         children = new HashMap<>();
@@ -68,6 +68,13 @@ public class PathNode {
     }
 
     /**
+     * @return The name of the parameter to this route (if there is one).
+     */
+    public String getParamName() {
+        return paramName;
+    }
+
+    /**
      * @param callback The callback corresponding to the route that this node is at the end of.
      */
     public void setCallback(RouteCallback callback) {
@@ -79,5 +86,19 @@ public class PathNode {
      */
     public RouteCallback getCallback() {
         return callback;
+    }
+
+    /**
+     * @return The map containing the children of this node.
+     */
+    public HashMap<String, PathNode> getChildren() {
+        return children;
+    }
+
+    /**
+     * @return Whether this node has any child nodes.
+     */
+    public boolean hasChildren() {
+        return !children.isEmpty() || paramNode != null;
     }
 }

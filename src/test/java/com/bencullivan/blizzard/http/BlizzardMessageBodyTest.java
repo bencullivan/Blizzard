@@ -10,11 +10,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class BlizzardMessageBodyTest {
 
-    private BlizzardMessage message = new BlizzardMessage(2048, 20);
+    private BlizzardMessage message = new BlizzardMessage(new BlizzardAttachment(),
+            2048, 20);
 
     @AfterEach
     public void resetMessage() {
-        message = new BlizzardMessage(2048, 20);
+        message = new BlizzardMessage(new BlizzardAttachment(),
+                2048, 20);
     }
 
     @Test

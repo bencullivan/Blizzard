@@ -1,11 +1,12 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.BlizzardStore;
+import com.bencullivan.blizzard.util.BlizzardStore;
 import com.bencullivan.blizzard.events.Event;
 import com.bencullivan.blizzard.events.ProcessMessageEvent;
 import com.bencullivan.blizzard.http.BlizzardAttachment;
 import com.bencullivan.blizzard.http.BlizzardRequest;
 import com.bencullivan.blizzard.http.BlizzardMessage;
+import com.bencullivan.blizzard.http.exceptions.BadRequest;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -45,22 +46,24 @@ public class BlizzardReader{
             return;
         }
 
+        // find out which registered channels can be read from
         Set<SelectionKey> keys = selector.selectedKeys();
 
-        for (SelectionKey key : keys) {
-            // get the HttpMessage of this key
+        for (SelectionKey key: keys) {
+            // get the message of this key
             BlizzardMessage message = ((BlizzardAttachment) key.attachment()).getMessage();
-
             try {
-                // read into the HttpMessage of this key
+                // read into the message of this key
                 ((SocketChannel) key.channel()).read(message.getCurrent());
-
                 // add a process message event to be executed by the thread pool
-                eventQueue.add(new ProcessMessageEvent(message, requestQueue));
+                eventQueue.offer(new ProcessMessageEvent(message, requestQueue));
             } catch (IOException e) {
-                //TODO: handle io exception
-            } catch (IllegalStateException | UnsupportedOperationException e) {
-                //TODO: handle exception (server error)
+                System.out.println("IOException caught in read()");
+                // add a bad request to the request queue with the status of server error
+                BlizzardRequest failed = new BlizzardRequest((BlizzardAttachment) key.attachment());
+                failed.setBadRequest(true);
+                failed.setBadRequestType(BadRequest.SERVER_ERROR);
+                requestQueue.offer(failed);
             }
         }
     }
