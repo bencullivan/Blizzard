@@ -57,7 +57,8 @@ public class ProcessMessageEvent implements Event {
                 requestQueue.put(bad);
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("Message processing was interrupted.\n" +
+                    "If this is a test, this is good. If not, there is a problem.");
         }
     }
 }

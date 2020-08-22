@@ -66,15 +66,14 @@ public class BlizzardMessage {
      * @param threadId The id of the thread.
      * @return Whether this thread is at the front of the queue.
      */
-    public boolean addThread(long threadId) {
+    public synchronized void addThread(long threadId) {
         threadQueue.offer(threadId);
-        return threadQueue.size() > 0 && threadQueue.peek() == threadId;
     }
 
     /**
      * @return The id of the thread that is permitted to operate on this
      */
-    public long getCurrentThreadId() {
+    public synchronized long getCurrentThreadId() {
         return threadQueue.size() > 0 ? threadQueue.peek() : Long.MIN_VALUE;
     }
 
@@ -533,42 +532,38 @@ public class BlizzardMessage {
         return (remainingByteCount -= numBytes) <= 0;
     }
 
-    // --- GETTERS ---
-
+    /**
+     * @return The BlizzardRequest that this message is filling with the parsed input bytes.
+     */
     public BlizzardRequest getRequest() {
         return request;
     }
 
-    ArrayList<String> getReqStrings() {
-        return reqStrings;
-    }
-
+    /**
+     * @return The start indices of the current header that is being parsed.
+     */
     int[] getStartIndexes() {
         return startIndexes;
     }
 
-    int getRemainingByteCount() {
-        return remainingByteCount;
-    }
-
-    int getReadByteCount() {
-        return readByteCount;
-    }
-
-    // --- SETTERS ---
-
-    void setRequest(BlizzardRequest request) {
-        this.request = request;
-    }
-
+    /**
+     *
+      * @param reqStrings The Strings that make up the http request.
+     */
     void setReqStrings(ArrayList<String> reqStrings) {
         this.reqStrings = reqStrings;
     }
 
+    /**
+     * @param startIndexes The start indices of the current header that is being parsed.
+     */
     void setStartIndexes(int[] startIndexes) {
         this.startIndexes = startIndexes;
     }
 
+    /**
+     * @param remainingByteCount The number of bytes left in the body of the http request.
+     */
     void setRemainingByteCount(int remainingByteCount) {
         this.remainingByteCount = remainingByteCount;
     }

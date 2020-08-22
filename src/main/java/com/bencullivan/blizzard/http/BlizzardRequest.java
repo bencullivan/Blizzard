@@ -13,7 +13,7 @@ import java.util.HashMap;
  */
 public class BlizzardRequest {
 
-    private final BlizzardAttachment attachment;  // the object that contains the message and outgoing message that are
+    private BlizzardAttachment attachment;  // the object that contains the message and outgoing message that are
     // used for channel reading and writing
     private String DEFAULT_RETURN_VAL = "none";  // returned when a request line field is missing
     private HashMap<String, String> headers;  // contains all of the header fields mapped to their values
@@ -172,6 +172,13 @@ public class BlizzardRequest {
      */
     public BadRequest getBadRequestType() {
         return badRequestType;
+    }
+
+    /**
+     * @param attachment The BlizzardAttachment to attach to this BlizzardRequest.
+     */
+    public void setAttachment(BlizzardAttachment attachment) {
+        this.attachment = attachment;
     }
 
     /**

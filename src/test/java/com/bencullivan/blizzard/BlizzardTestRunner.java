@@ -1,7 +1,8 @@
 package com.bencullivan.blizzard;
 
+import com.bencullivan.blizzard.events.*;
 import com.bencullivan.blizzard.http.*;
-import com.bencullivan.blizzard.util.BlizzardStoreTest;
+import com.bencullivan.blizzard.util.*;
 import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
@@ -27,7 +28,9 @@ public class BlizzardTestRunner {
                 DiscoverySelectors.selectClass(BlizzardMessageTest.class),
                 DiscoverySelectors.selectClass(BlizzardRequestTest.class),
                 DiscoverySelectors.selectClass(BlizzardResponseTest.class),
-                DiscoverySelectors.selectClass(BlizzardStoreTest.class)
+                DiscoverySelectors.selectClass(BlizzardStoreTest.class),
+                DiscoverySelectors.selectClass(ProcessorTest.class),
+                DiscoverySelectors.selectClass(ProcessMessageEventTest.class)
         ));
         SummaryGeneratingListener listener = new SummaryGeneratingListener();
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request().selectors(tests).build();
