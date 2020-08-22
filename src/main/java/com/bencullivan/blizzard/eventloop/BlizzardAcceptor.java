@@ -1,9 +1,9 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.util.BlizzardStore;
 import com.bencullivan.blizzard.http.BlizzardAttachment;
 import com.bencullivan.blizzard.http.BlizzardMessage;
 import com.bencullivan.blizzard.http.BlizzardOutgoingMessage;
+import com.bencullivan.blizzard.util.BlizzardStore;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;

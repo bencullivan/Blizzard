@@ -6,7 +6,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -15,7 +14,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class BlizzardMessage {
 
-    private final BlizzardAttachment ATTACHMENT;  // the object containing this message and its corresponding
+    private final BlizzardAttachment attachment;  // the object containing this message and its corresponding
     // outgoing message
     private final int UNKNOWN;  // representing an unknown number
     private final char[] CRLF;  // carriage return line feed
@@ -39,7 +38,7 @@ public class BlizzardMessage {
      * @param processorCount The number of processor threads.
      */
     public BlizzardMessage(BlizzardAttachment attachment, int headerBufferSize, int processorCount) {
-        ATTACHMENT = attachment;
+        this.attachment = attachment;
         UNKNOWN = -42069;
         CRLF = new char[] {'\r', '\n'};
         MAX_HEADER_SIZE = 8192;
@@ -52,7 +51,7 @@ public class BlizzardMessage {
      * Sets/Restores this message's initial state.
      */
     public void restoreInitialValues() {
-        request = new BlizzardRequest(ATTACHMENT);
+        request = new BlizzardRequest(attachment);
         reqStrings = new ArrayList<>();
         startIndexes = new int[2];
         remainingByteCount = UNKNOWN;

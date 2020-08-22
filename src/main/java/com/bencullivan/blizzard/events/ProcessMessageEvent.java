@@ -8,7 +8,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Processes a BlizzardMessage by parsing the bytes that were read into it into a BlizzardRequest.
- * This class's execute method is always run on a processor thread.
+ * This class's execute() method is always run on a processor thread.
  * @author Ben Cullivan (2020)
  */
 public class ProcessMessageEvent implements Event {

@@ -11,7 +11,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  */
 public class BlizzardOutgoingMessage {
 
-    private final BlizzardAttachment ATTACHMENT;  // the object storing the channel and write selector
+    private final BlizzardAttachment attachment;  // the object storing the channel and write selector
     private final ArrayBlockingQueue<BlizzardResponse> responses;  // the queue of responses that are ready to be sent
     // through this outgoing message's channel
     private BlizzardResponse current;  // the response that is currently being sent
@@ -22,7 +22,7 @@ public class BlizzardOutgoingMessage {
      * @param attachment The object that stores the socket channel and write selector.
      */
     public BlizzardOutgoingMessage(BlizzardAttachment attachment) {
-        ATTACHMENT = attachment;
+        this.attachment = attachment;
         responses = new ArrayBlockingQueue<>(50);
         writeRegistered = false;
     }
@@ -53,7 +53,7 @@ public class BlizzardOutgoingMessage {
             // register with the selector if non already registered
             if (!writeRegistered) {
                 try {
-                    ATTACHMENT.getChannel().register(ATTACHMENT.getWriteSelector(), SelectionKey.OP_WRITE, ATTACHMENT);
+                    attachment.getChannel().register(attachment.getWriteSelector(), SelectionKey.OP_WRITE, attachment);
                     writeRegistered = true;
                 } catch (ClosedChannelException e) {
                     e.printStackTrace();
@@ -70,7 +70,7 @@ public class BlizzardOutgoingMessage {
     public ByteBuffer getCurrent() {
         if (current == null && responses.isEmpty()) {
             // if there are no responses waiting to be written, unregister this channel with the selector
-            SelectionKey key = ATTACHMENT.getChannel().keyFor(ATTACHMENT.getWriteSelector());
+            SelectionKey key = attachment.getChannel().keyFor(attachment.getWriteSelector());
             if (key != null) key.cancel();
             writeRegistered = false;
             return null;
@@ -93,7 +93,7 @@ public class BlizzardOutgoingMessage {
             current = responses.poll();
             if (current == null) {
                 // if there are no responses waiting to be written, unregister this channel with the selector
-                SelectionKey key = ATTACHMENT.getChannel().keyFor(ATTACHMENT.getWriteSelector());
+                SelectionKey key = attachment.getChannel().keyFor(attachment.getWriteSelector());
                 if (key != null) key.cancel();
                 writeRegistered = false;
             }

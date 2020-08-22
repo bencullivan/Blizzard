@@ -18,7 +18,7 @@ public class BlizzardServer {
     private final int DEFAULT_PORT;
     private final int PROCESSOR_COUNT;
     private final int HB_SIZE;
-    private final BlizzardStore STORE;
+    private final BlizzardStore store;
 
     public BlizzardServer() {
         this(20, 2000, 2000, 2000, 2048);
@@ -35,7 +35,7 @@ public class BlizzardServer {
                           int hbSize) {
         DEFAULT_PORT = 5000;
         PROCESSOR_COUNT = processorCount;
-        STORE = new BlizzardStore(acceptedChannelQueueSize, eventQueueSize, requestQueueSize);
+        store = new BlizzardStore(acceptedChannelQueueSize, eventQueueSize, requestQueueSize);
         HB_SIZE = hbSize;
     }
 
@@ -45,7 +45,7 @@ public class BlizzardServer {
      * @param callback The callback that will be executed when an HTTP request hits this route.
      */
     public void post(String path, RouteCallback callback) {
-        STORE.insertPostRoute(path.split("/"), callback);
+        store.insertPostRoute(path.split("/"), callback);
     }
 
     /**
@@ -54,7 +54,7 @@ public class BlizzardServer {
      * @param callback The callback that will be executed when an HTTP request hits this route.
      */
     public void get(String path, RouteCallback callback) {
-        STORE.insertGetRoute(path.split("/"), callback);
+        store.insertGetRoute(path.split("/"), callback);
     }
 
     /**
@@ -63,7 +63,7 @@ public class BlizzardServer {
      * @param callback The callback that will be executed when an HTTP request hits this route.
      */
     public void put(String path, RouteCallback callback) {
-        STORE.insertPutRoute(path.split("/"), callback);
+        store.insertPutRoute(path.split("/"), callback);
     }
 
     /**
@@ -72,7 +72,7 @@ public class BlizzardServer {
      * @param callback The callback that will be executed when an HTTP request hits this route.
      */
     public void patch(String path, RouteCallback callback) {
-        STORE.insertPatchRoute(path.split("/"), callback);
+        store.insertPatchRoute(path.split("/"), callback);
     }
 
     /**
@@ -81,7 +81,7 @@ public class BlizzardServer {
      * @param callback The callback that will be executed when an HTTP request hits this route.
      */
     public void delete(String path, RouteCallback callback) {
-        STORE.insertDeleteRoute(path.split("/"), callback);
+        store.insertDeleteRoute(path.split("/"), callback);
     }
 
     /**
@@ -90,7 +90,7 @@ public class BlizzardServer {
      */
     public void listen(int port) {
         // create the listener that will listen for incoming socket connections on a separate thread
-        BlizzardListener listener = new BlizzardListener(port, STORE);
+        BlizzardListener listener = new BlizzardListener(port, store);
 
         // create the reader selector that will select channels that can be read from
         // and the write selector that will select channels that can be written to
@@ -105,7 +105,7 @@ public class BlizzardServer {
         }
 
         // create the event loop that will handle message reading, writing, and processing on the main thread
-        BlizzardEventLoop eventLoop = new BlizzardEventLoop(readerSelector, writeSelector, STORE,
+        BlizzardEventLoop eventLoop = new BlizzardEventLoop(readerSelector, writeSelector, store,
                 PROCESSOR_COUNT, HB_SIZE);
 
         // create the processor pool

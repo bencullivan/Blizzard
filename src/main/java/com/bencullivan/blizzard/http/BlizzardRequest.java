@@ -1,6 +1,7 @@
 package com.bencullivan.blizzard.http;
 
 import com.bencullivan.blizzard.http.exceptions.BadRequest;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -12,7 +13,7 @@ import java.util.HashMap;
  */
 public class BlizzardRequest {
 
-    private final BlizzardAttachment ATTACHMENT;  // the object that contains the message and outgoing message that are
+    private final BlizzardAttachment attachment;  // the object that contains the message and outgoing message that are
     // used for channel reading and writing
     private String DEFAULT_RETURN_VAL = "none";  // returned when a request line field is missing
     private HashMap<String, String> headers;  // contains all of the header fields mapped to their values
@@ -29,7 +30,7 @@ public class BlizzardRequest {
      *                   channel that this request came from.
      */
     public BlizzardRequest(BlizzardAttachment attachment) {
-        ATTACHMENT = attachment;
+        this.attachment = attachment;
         requestLine = new String[0];
         headers = new HashMap<>();
         queries = new HashMap<>();
@@ -42,7 +43,7 @@ public class BlizzardRequest {
      * @return A reference to the BlizzardAttachment object corresponding to the channel that this request came from.
      */
     public BlizzardAttachment getAttachment() {
-        return ATTACHMENT;
+        return attachment;
     }
 
     /**

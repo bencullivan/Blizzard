@@ -29,18 +29,21 @@ public class FileReader {
     }
 
     /**
-     * Reads a file into a StringBuilder.
+     * Reads a file into a StringBuilder and then closes the input stream.
+     * @return This FileReader.
      */
-    public void readFile() {
+    public FileReader readFile() {
         try {
             int bytesRead = din.read(buffer, 0, BUFFER_SIZE);
             while (bytesRead != -1) {
                 sb.append(new String(Arrays.copyOfRange(buffer, 0, bytesRead), StandardCharsets.UTF_8));
                 bytesRead = din.read(buffer, 0, BUFFER_SIZE);
             }
+            din.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return this;
     }
 
     /**
@@ -49,16 +52,5 @@ public class FileReader {
      */
     public String getFileString() {
         return sb.toString();
-    }
-
-    /**
-     * Closes the input stream.
-     */
-    public void close() {
-        try {
-            din.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }

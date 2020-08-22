@@ -76,10 +76,8 @@ public class BlizzardResponseTest {
         response.sendFile(System.getProperty("user.dir") +
                 "/src/test/resources/html-res-test.html").sendStatus(200);
         response.finish();
-        FileReader reader = new FileReader(System.getProperty("user.dir") +
-                "/src/test/resources/html-res-test.html");
-        reader.readFile();
-        String fileString = reader.getFileString();
+        String fileString = new FileReader(System.getProperty("user.dir") +
+                "/src/test/resources/html-res-test.html").readFile().getFileString();
         String expected = "HTTP/1.1 200 OK\r\n" +
                 "Date:" + response.getTime() + "\r\n" +
                 "Content-Type:text/html; charset=UTF-8\r\n" +

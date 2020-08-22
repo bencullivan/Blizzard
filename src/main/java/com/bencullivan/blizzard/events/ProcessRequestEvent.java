@@ -1,16 +1,16 @@
 package com.bencullivan.blizzard.events;
 
-import com.bencullivan.blizzard.util.BlizzardStore;
-import com.bencullivan.blizzard.util.PathNode;
 import com.bencullivan.blizzard.http.BlizzardRequest;
 import com.bencullivan.blizzard.http.BlizzardResponse;
+import com.bencullivan.blizzard.util.BlizzardStore;
+import com.bencullivan.blizzard.util.PathNode;
 
 import java.util.HashMap;
 
 /**
  * Processes a request by calling the user-defined callback corresponding to the route of the request.
  * Creates an http response and prepares it to be sent back to the client.
- * This class's execute method is always run on a processor thread.
+ * This class's execute() method is always run on a processor thread.
  * @author Ben Cullivan (2020)
  */
 public class ProcessRequestEvent implements Event {

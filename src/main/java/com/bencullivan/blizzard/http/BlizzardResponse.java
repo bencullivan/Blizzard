@@ -1,6 +1,7 @@
 package com.bencullivan.blizzard.http;
 
 import com.bencullivan.blizzard.util.FileReader;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -109,10 +110,7 @@ public class BlizzardResponse {
     public BlizzardResponse sendFile(String filePath) {
         if (filePath == null || filePath.length() == 0) return this;
         try {
-            FileReader reader = new FileReader(filePath);
-            reader.readFile();
-            body.append(reader.getFileString());
-            reader.close();
+            body.append(new FileReader(filePath).readFile().getFileString());
             contentType = "text/html; charset=UTF-8";
         } catch (IOException e) {
             System.out.println("Are you sure there is a readable file with that path?");
@@ -122,7 +120,7 @@ public class BlizzardResponse {
     }
 
     /**
-     * @return The current time in http response format
+     * Sets the current time in http response format.
      */
     private void setTime() {
         SimpleDateFormat dateFormat = new SimpleDateFormat(
@@ -173,7 +171,7 @@ public class BlizzardResponse {
     }
 
     /**
-     * @return The time (for testing purposes).
+     * @return The time when this response was sent (for testing purposes).
      */
     String getTime() {
         return time;

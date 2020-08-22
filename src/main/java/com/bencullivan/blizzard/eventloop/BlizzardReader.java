@@ -1,12 +1,12 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.util.BlizzardStore;
 import com.bencullivan.blizzard.events.Event;
 import com.bencullivan.blizzard.events.ProcessMessageEvent;
 import com.bencullivan.blizzard.http.BlizzardAttachment;
 import com.bencullivan.blizzard.http.BlizzardRequest;
 import com.bencullivan.blizzard.http.BlizzardMessage;
 import com.bencullivan.blizzard.http.exceptions.BadRequest;
+import com.bencullivan.blizzard.util.BlizzardStore;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
@@ -17,7 +17,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Reads data from SocketChannels into BlizzardMessages and then sends the BlizzardMessages to be processed.
- * @author Ben Cullivan
+ * @author Ben Cullivan (2020)
  */
 public class BlizzardReader{
 

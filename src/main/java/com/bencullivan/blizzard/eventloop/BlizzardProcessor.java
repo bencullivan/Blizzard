@@ -1,9 +1,9 @@
 package com.bencullivan.blizzard.eventloop;
 
-import com.bencullivan.blizzard.util.BlizzardStore;
 import com.bencullivan.blizzard.events.Event;
 import com.bencullivan.blizzard.events.ProcessRequestEvent;
 import com.bencullivan.blizzard.http.BlizzardRequest;
+import com.bencullivan.blizzard.util.BlizzardStore;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
