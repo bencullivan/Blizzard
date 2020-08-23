@@ -79,7 +79,6 @@ public class BlizzardOutgoingMessage {
             current = responses.poll();
             remainingBytes = current.getMessage().array().length;
         }
-        current.getMessage().flip();
         return current.getMessage();
     }
 

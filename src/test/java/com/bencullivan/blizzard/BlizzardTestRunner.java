@@ -28,9 +28,7 @@ public class BlizzardTestRunner {
                 DiscoverySelectors.selectClass(BlizzardMessageTest.class),
                 DiscoverySelectors.selectClass(BlizzardRequestTest.class),
                 DiscoverySelectors.selectClass(BlizzardResponseTest.class),
-                DiscoverySelectors.selectClass(BlizzardStoreTest.class),
-                DiscoverySelectors.selectClass(ProcessorTest.class),
-                DiscoverySelectors.selectClass(ProcessMessageEventTest.class)
+                DiscoverySelectors.selectClass(BlizzardStoreTest.class)
         ));
         SummaryGeneratingListener listener = new SummaryGeneratingListener();
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request().selectors(tests).build();

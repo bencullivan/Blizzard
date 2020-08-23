@@ -27,7 +27,7 @@ public class Processor implements Runnable {
                 Event event = eventQueue.take();
                 event.execute();
             } catch (InterruptedException e) {
-                return;
+                e.printStackTrace();
             }
         }
     }

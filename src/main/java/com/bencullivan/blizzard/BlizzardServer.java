@@ -21,7 +21,8 @@ public class BlizzardServer {
     private final BlizzardStore store;
 
     public BlizzardServer() {
-        this(20, 2000, 2000, 2000, 2048);
+        this(20, 2000, 2000,
+                2000, 2048);
     }
 
     /**

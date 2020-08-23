@@ -46,7 +46,7 @@ public class BlizzardWriter {
             if (output == null) continue;
             try {
                 // write to the channel
-                ((SocketChannel) key.channel()).write(output);
+                outMessage.updateRemaining(((SocketChannel) key.channel()).write(output));
             } catch (IOException e) {
                 e.printStackTrace();
             }
