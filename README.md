@@ -26,7 +26,7 @@ The **EventLoop** runs on the main thread and has four separate components. They
 
 Here is what happens during each iteration of the **EventLoop**.
 
-The **BlizzardAcceptor** accepts new SocketChannel connections from the queue and pairs them with a [Selector](https://docs.oracle.com/javase/7/docs/api/java/nio/channels/Selector.html) that determines which SocketChannels can be read from and a Selector that determines which SocketChannels can be written to. The **BlizzardAcceptor** also pairs each connection with a **BlizzardMessage** object that handles parsing of the bytes from the buffers that are read from the SocketChannel.
+The **BlizzardAcceptor** accepts new SocketChannel connections from the queue and pairs them with a [Selector](https://docs.oracle.com/javase/7/docs/api/java/nio/channels/Selector.html) that determines which SocketChannels can be read from and a Selector that determines which SocketChannels can be written to. The **BlizzardAcceptor** also pairs each connection with a **BlizzardMessage** object that handles parsing the bytes from the buffers that are read from the SocketChannel.
 
 The **BlizzardReader** uses the read Selector to determine which SocketChannels can be read from. It then reads bytes from the available SocketChannels (if there are any) into the [ByteBuffers](https://docs.oracle.com/javase/7/docs/api/java/nio/ByteBuffer.html) of the SocketChannels' **BlizzardMessage** objects. For each read operation a **ProcessMessageEvent** is added to the event queue.
 
