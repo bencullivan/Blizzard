@@ -32,7 +32,7 @@ The **BlizzardReader** uses the read Selector to determine which SocketChannels 
 
 The **BlizzardProcessor** polls the request queue to see if there is an available **BlizzardRequest** to be processed. If there is, it creates a **ProcessRequestEvent** which it adds to the event queue. (It sends a maximum of eight requests for processing in each loop iteration.)
 
-The **BlizzardWriter** uses the write Selector to determine which SocketChannels can be written to. For each SocketChannel that is available to be written to, the **BlizzardWriter** writes the bytes from the SocketChannel's **BlizzardOutgoingMessage** to the SocketChannel.
+The **BlizzardWriter** uses the write Selector to determine which SocketChannels can be written to. For each SocketChannel that is available to be written to, the **BlizzardWriter** writes the bytes from the SocketChannel's **BlizzardOutgoingMessage**.
 
 ### Events
 
