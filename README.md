@@ -2,7 +2,13 @@
 
 ## Design
 
-[Event Loop](Event-Loop)  \n  [Events](Events)    [HTTP](HTTP)    [Server](Server)
+[Event Loop](Event-Loop)
+
+[Events](Events)    
+
+[HTTP](HTTP)    
+
+[Server](Server)
 
 ### Event Loop
 
