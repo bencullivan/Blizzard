@@ -38,7 +38,7 @@ The **BlizzardWriter** uses the write Selector to determine which SocketChannels
 
 The biggest challenge I encountered when creating **Blizzard** was dealing with the reception of partial HTTP messages. When using non-blocking IO in Java it is possible for messages to be read only partially from their SocketChannels. This made figuring out how to parse and store messages as well as when a full message has actually been received very difficult. 
 
-To solve this problem I created several custom parsing algorithms that are run by the **BlizzardMessage** objects during **ProcessMessageEvents**. The algorithms solve all of the problems I just mentioned and run in linear time with respect to the length of the message (in bytes). I will not explain them in depth here but if you are interested in seeing how they work check out the code in **BlizzardMessage.java**.
+To solve this problem, I created several custom parsing algorithms that are run by the **BlizzardMessage** objects during **ProcessMessageEvents**. The algorithms solve all of the problems I just mentioned and run in linear time with respect to the length of the message (in bytes). I will not explain them in depth here but if you are interested in seeing how they work check out the code in **BlizzardMessage.java**.
 
 A **ProcessMessageEvent** handles the parsing of bytes from a buffer that was just read into. 
 
