@@ -30,7 +30,7 @@ The **BlizzardAcceptor** accepts new SocketChannel connections from the queue an
 
 The **BlizzardReader** uses the read Selector to determine which SocketChannels can be read from. It then reads bytes from the available SocketChannels (if there are any) into the [ByteBuffers](https://docs.oracle.com/javase/7/docs/api/java/nio/ByteBuffer.html) of the SocketChannels' **BlizzardMessage** objects. For each read operation a **ProcessMessageEvent** is added to the event queue.
 
-The **BlizzardProcessor** polls the request queue to see if there is an available **BlizzardRequest** to be processed. If there is it, creates a **ProcessRequestEvent** which it adds to the event queue. (It sends a maximum of eight requests for processing in each loop iteration.)
+The **BlizzardProcessor** polls the request queue to see if there is an available **BlizzardRequest** to be processed. If there is, it creates a **ProcessRequestEvent** which it adds to the event queue. (It sends a maximum of eight requests for processing in each loop iteration.)
 
 The **BlizzardWriter** uses the write Selector to determine which SocketChannels can be written to. For each SocketChannel that is available to be written to, the **BlizzardWriter** writes the bytes from the SocketChannel's **BlizzardOutgoingMessage** to the SocketChannel.
 
